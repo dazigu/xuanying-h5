@@ -276,6 +276,47 @@
 </head>
 <body>
 
+<!-- 收藏本站引导条（首次访问后3秒自动弹出）-->
+<div id="favBar" class="hidden" style="background:linear-gradient(135deg,#f59e0b,#f97316);color:white;padding:10px 16px;text-align:center;font-size:13px;position:relative;cursor:pointer;" onclick="showFavGuide()">
+  <span>⭐ 觉得好用？点这里收藏，下次一键打开不迷路</span>
+  <span onclick="event.stopPropagation();closeFavBar()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);opacity:0.7;cursor:pointer;font-size:18px;line-height:1;">×</span>
+</div>
+
+<!-- 收藏引导弹窗 -->
+<div id="favGuide" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[80] p-4">
+  <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl text-center modal-fade overflow-hidden">
+    <div class="pt-6 pb-4 px-6" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
+      <div style="font-size:48px;">⭐</div>
+      <h3 class="text-lg font-black mt-2" style="color:#92400e;">收藏「炫影照相馆」</h3>
+      <p class="text-xs mt-1" style="color:#b45309;">下次打开手机就能直接用，零广告</p>
+    </div>
+    <div class="px-6 py-5 text-left space-y-3">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">📱</div>
+        <div class="text-sm">
+          <p class="font-bold text-gray-800">iPhone（Safari）</p>
+          <p class="text-xs text-gray-500">点底部分享按钮「⬆️」→ 添加到主屏幕</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">🤖</div>
+        <div class="text-sm">
+          <p class="font-bold text-gray-800">Android（Chrome）</p>
+          <p class="text-xs text-gray-500">点右上角「⋮」→「添加到主屏幕」</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">💬</div>
+        <div class="text-sm">
+          <p class="font-bold text-gray-800">微信内</p>
+          <p class="text-xs text-gray-500">点右上「···」→「收藏」</p>
+        </div>
+      </div>
+    </div>
+    <button onclick="closeFavGuide()" class="m-5 mt-2 w-[calc(100%-2.5rem)] py-2.5 rounded-xl text-sm font-medium text-white" style="background:linear-gradient(135deg,#f59e0b,#d97706);">我知道了</button>
+  </div>
+</div>
+
 <!-- 顶部进度条 -->
 <div class="step-progress">
   <div class="step-progress-bar" id="stepProgress" style="width:33%"></div>
@@ -439,9 +480,20 @@
         <!-- 左侧预览 -->
         <div class="text-center">
           <p class="text-sm text-gray-500 mb-3">证件照预览</p>
-          <div class="preview-wrap inline-block">
+          <div class="preview-wrap inline-block relative">
             <canvas id="previewCanvas" class="preview-canvas" width="560" height="720"></canvas>
-            <div class="preview-handle" id="previewHandle" style="left:50%;top:35%;transform:translate(-50%,-50%)"></div>
+            <!-- 4向十字拖动手柄（取代原来的小蓝点）-->
+            <div id="previewHandle" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);cursor:move;display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:rgba(99,102,241,0.92);border-radius:50%;box-shadow:0 4px 16px rgba(99,102,241,0.4);border:3px solid white;color:white;">
+              <div style="position:absolute;left:50%;top:8px;transform:translateX(-50%);width:2px;height:8px;background:white;"></div>
+              <div style="position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:2px;height:8px;background:white;"></div>
+              <div style="position:absolute;top:50%;left:8px;transform:translateY(-50%);width:8px;height:2px;background:white;"></div>
+              <div style="position:absolute;top:50%;right:8px;transform:translateY(-50%);width:8px;height:2px;background:white;"></div>
+              <i class="fa fa-arrows" style="font-size:14px;z-index:1;"></i>
+            </div>
+            <!-- 拖动提示文字（上传后才显示）-->
+            <div id="dragHint" class="hidden absolute bottom-2 left-0 right-0 text-center text-xs text-white px-3 py-1.5 rounded-full mx-auto" style="width:fit-content;background:rgba(0,0,0,0.7);">
+              <i class="fa fa-hand-pointer-o mr-1"></i>按住十字拖动调整位置
+            </div>
           </div>
           <!-- 缩放控制 -->
           <div class="mt-4 flex justify-center items-center gap-3">
@@ -466,6 +518,42 @@
               <span class="text-2xl cursor-pointer text-gray-300 hover:text-yellow-400" data-rate="5" onclick="ratePreview(this)">★</span>
             </div>
             <p class="text-xs text-gray-400 mt-1" id="ratingText">点击星星评分</p>
+          </div>
+
+          <!-- 增值服务卡片 -->
+          <div class="mt-5 p-4 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl border border-orange-200">
+            <p class="text-sm font-bold text-gray-800 flex items-center">
+              <i class="fa fa-gift text-orange-500 mr-2"></i>需要实体照片？
+            </p>
+            <p class="text-xs text-gray-600 mt-1.5 leading-relaxed">专业相纸打印 + 防水塑封，全国包邮</p>
+            <div class="mt-3 space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-700">📷 冲印版（一寸/二寸 8 张）</span>
+                <span class="text-red-500 font-bold">¥9.9</span>
+              </div>
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-700">📷 高清版（1寸 12 张+电子版）</span>
+                <span class="text-red-500 font-bold">¥19.9</span>
+              </div>
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-700">📷 精修版（含修图/换装）</span>
+                <span class="text-red-500 font-bold">¥29.9</span>
+              </div>
+            </div>
+            <button onclick="showToast('已复制客服微信，加我咨询打印版', 'success');copyWechat();" class="mt-3 w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2.5 rounded-lg text-sm font-medium hover:from-orange-600 hover:to-red-600 shadow-sm">
+              <i class="fa fa-weixin mr-1"></i>微信咨询客服
+            </button>
+          </div>
+
+          <!-- 邀请有奖（裂变） -->
+          <div class="mt-4 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+            <p class="text-sm font-bold text-gray-800 flex items-center">
+              <i class="fa fa-share-alt text-indigo-500 mr-2"></i>分享有礼
+            </p>
+            <p class="text-xs text-gray-600 mt-1.5">分享给朋友，每位好友下载一次 → 你和朋友各得「精修版9折券」</p>
+            <button onclick="shareSite()" class="mt-3 w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-2.5 rounded-lg text-sm font-medium hover:from-indigo-600 hover:to-purple-600 shadow-sm">
+              <i class="fa fa-share-alt mr-1"></i>立即分享给好友
+            </button>
           </div>
         </div>
 
@@ -493,28 +581,73 @@
               <input type="file" id="previewUpload" accept="image/*" class="hidden" onchange="handlePreviewUpload(this)">
             </div>
             <p id="previewFileName" class="text-xs text-indigo-600 mt-2 hidden"></p>
-            <!-- 上传小贴士 -->
-            <details class="mt-2 text-xs text-gray-500 cursor-pointer">
-              <summary class="hover:text-indigo-600">📸 拍照小贴士</summary>
-              <ul class="mt-2 space-y-1 pl-4 list-disc text-gray-500">
-                <li>光线充足，面部清晰</li>
-                <li>背景简洁（白墙最佳）</li>
-                <li>露出眉毛和耳朵</li>
-                <li>不戴帽子 / 墨镜</li>
-                <li>正面平视，表情自然</li>
-              </ul>
+            <!-- 拍照姿势引导卡（4张示例） -->
+            <details class="mt-2 text-xs text-gray-600 cursor-pointer group" open>
+              <summary class="hover:text-indigo-600 font-medium text-gray-700">📸 拍照姿势参考（点击展开）</summary>
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <!-- 4个图示，用 emoji + 文字代替图片（避免依赖外网）-->
+                <div class="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
+                  <div class="text-2xl">✅</div>
+                  <p class="text-xs font-medium text-green-700 mt-1">正确示范</p>
+                  <p class="text-[10px] text-gray-500">正面平视白墙</p>
+                </div>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-2 text-center">
+                  <div class="text-2xl">❌</div>
+                  <p class="text-xs font-medium text-red-700 mt-1">背景杂乱</p>
+                  <p class="text-[10px] text-gray-500">不要带其他物体</p>
+                </div>
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-center">
+                  <div class="text-2xl">💡</div>
+                  <p class="text-xs font-medium text-yellow-700 mt-1">光线要均匀</p>
+                  <p class="text-[10px] text-gray-500">脸前不要有阴影</p>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
+                  <div class="text-2xl">👔</div>
+                  <p class="text-xs font-medium text-blue-700 mt-1">穿深色衣领</p>
+                  <p class="text-[10px] text-gray-500">深色衣领最百搭</p>
+                </div>
+              </div>
+              <p class="mt-2 text-[10px] text-gray-400 leading-relaxed">提示：白墙拍出来效果最好，本工具会自动识别白色背景替换为所选底色</p>
             </details>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">2. 选择证件规格</label>
             <select id="previewSize" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" onchange="drawPreview()">
-              <option value="26:32">身份证 26×32mm</option>
-              <option value="25:35">一寸 25×35mm（最常用）</option>
-              <option value="33:48">小二寸 33×48mm</option>
-              <option value="35:49">二寸 35×49mm</option>
-              <option value="51:51">美国签证 51×51mm</option>
-              <option value="40:60">结婚登记 40×60mm</option>
+              <optgroup label="━━ 常用尺寸 ━━">
+                <option value="25:35">一寸 25×35mm（最常用）</option>
+                <option value="33:48">小二寸 33×48mm（最常用）</option>
+                <option value="35:49">二寸 35×49mm</option>
+                <option value="26:32">二寸 26×32mm（身份证）</option>
+              </optgroup>
+              <optgroup label="━━ 国内证件 ━━">
+                <option value="33:48">护照 33×48mm</option>
+                <option value="48:33">驾照/居住证 48×33mm</option>
+                <option value="21:26">港澳通行证 21×26mm</option>
+                <option value="40:60">结婚登记 40×60mm</option>
+                <option value="32:38">兵役证 32×38mm</option>
+                <option value="22:32">党员证 22×32mm</option>
+              </optgroup>
+              <optgroup label="━━ 考试报名 ━━">
+                <option value="24:30">注册会计师 24×30mm</option>
+                <option value="24:32">英语四六级 24×32mm</option>
+                <option value="34:51">教师资格证 34×51mm</option>
+                <option value="35:45">护士执业 35×45mm</option>
+                <option value="39:52">研究生考试 39×52mm</option>
+              </optgroup>
+              <optgroup label="━━ 签证/出国 ━━">
+                <option value="51:51">美国签证 51×51mm（正方形）</option>
+                <option value="35:45">日本签证 35×45mm</option>
+                <option value="35:35">韩国签证 35×35mm（正方形）</option>
+                <option value="33:48">申根签证 35×45mm</option>
+                <option value="33:48">英国签证 35×45mm</option>
+              </optgroup>
+              <optgroup label="━━ 求职/生活 ━━">
+                <option value="25:35">简历照 25×35mm</option>
+                <option value="33:48">职业装 33×48mm</option>
+                <option value="48:66">海报形象照 48×66mm</option>
+                <option value="64:96">宣传形象照 64×96mm</option>
+              </optgroup>
             </select>
           </div>
 
@@ -1547,6 +1680,52 @@ function ratePreview(el){
   document.getElementById('ratingText').innerText = texts[rate];
   if(rate >= 4) showToast('感谢您的反馈！');
 }
+
+
+
+// ===== 分享本站（裂变） =====
+function shareSite(){
+  const url = location.href;
+  const text = '免费证件照在线工具，上传照片自动换底色，超好用！';
+  if(navigator.share){
+    navigator.share({title:'炫影照相馆', text, url}).catch(()=>{
+      // 用户取消或不支持
+    });
+  } else {
+    // 降级：复制链接
+    copyText('链接', url);
+    showToast('链接已复制，去发给朋友吧！', 'success');
+  }
+}
+
+// ===== 收藏本站引导 =====
+// 首次访问3秒后自动弹出，关闭后30天内不再显示
+function showFavBar(){
+  const bar = document.getElementById('favBar');
+  if(!bar) return;
+  if(localStorage.getItem('favBarClosedAt')){
+    const days = (Date.now() - parseInt(localStorage.getItem('favBarClosedAt'))) / 86400000;
+    if(days < 30) return;
+  }
+  bar.classList.remove('hidden');
+  setTimeout(()=>{
+    bar.classList.add('hidden');
+  }, 6000);
+}
+function closeFavBar(){
+  document.getElementById('favBar').classList.add('hidden');
+  localStorage.setItem('favBarClosedAt', Date.now().toString());
+}
+function showFavGuide(){
+  document.getElementById('favGuide').classList.remove('hidden');
+  closeFavBar();
+}
+function closeFavGuide(){
+  document.getElementById('favGuide').classList.add('hidden');
+  localStorage.setItem('favBarClosedAt', Date.now().toString());
+}
+// 页面加载完成后，3秒后弹出收藏引导
+setTimeout(showFavBar, 3000);
 
 // ===== 拖动头像 =====
 (function initDrag(){
