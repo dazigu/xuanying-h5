@@ -6,16 +6,38 @@
   <title>炫影照相馆 - 在线证件照</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📸</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
-<script type="module">
-  // 懒加载 @imgly/background-removal（首次用浏览器端AI抠图）
-  // 模块按需导入，不阻塞首屏
-  window.__loadImgly = async function(){
-    if(window.imglyLoaded) return window.imglyLoaded;
-    if(window.imglyLoading) return window.imglyLoading;
-    const m = await import('https://cdn.jsdelivr.net/npm/@imgly/[email protected]/+esm');
-    window.imglyLoaded = m.removeBackground;
-    return m.removeBackground;
-  };
+<!-- @imgly 浏览器端 AI 抠图（懒加载，~30MB 首次）-->
+<script>
+window.__loadImgly = async function(){
+  if(window.imglyLoaded) return window.imglyLoaded;
+  if(window.imglyLoading) return window.imglyLoading;
+  console.log('🤖 正在加载AI抠图模型（首次约30MB，请稍候）...');
+  window.imglyLoading = new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.textContent = `import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/[email protected]/+esm'; window.imglyLoaded = removeBackground; window.imglyLoading = null; console.log('✅ AI抠图模型加载完成');`;
+    s.onerror = (e)=>{
+      window.imglyLoading = null;
+      console.error('AI抠图模型加载失败', e);
+      reject(e);
+    };
+    document.head.appendChild(s);
+    // 轮询等待
+    const check = setInterval(()=>{
+      if(window.imglyLoaded){
+        clearInterval(check);
+        resolve(window.imglyLoaded);
+      }
+    }, 200);
+    setTimeout(()=>{
+      clearInterval(check);
+      if(!window.imglyLoaded){
+        reject(new Error('AI抠图模型加载超时'));
+      }
+    }, 60000); // 60秒超时
+  });
+  return window.imglyLoading;
+};
 </script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
@@ -998,11 +1020,9 @@
       <p class="text-sm mt-1" style="color:#b45309;">如果你觉得好用，请我喝杯奶茶吧 🙏</p>
     </div>
     <!-- 收款码 -->
-    <div class="px-6 py-5" style="background:#1f2937;">
-      <div class="mx-auto" style="width:240px;height:300px;display:flex;align-items:center;justify-content:center;background:#000;border-radius:12px;overflow:hidden;border:3px solid #f59e0b;box-shadow:0 4px 16px rgba(0,0,0,0.3);">
-        <img id="tipQRImg" src="" alt="赞赏码" style="width:100%;height:100%;object-fit:contain;display:block;">
-      </div>
-      <p class="text-xs text-gray-300 mt-3">微信扫码 → 选择金额 → 任意金额都感谢 ☕<br><span class="text-gray-400">金额随心，1元也是爱</span></p>
+    <div class="px-6 py-4" style="background:#fff;">
+      <img id="tipQRImg" src="" alt="赞赏码" style="display:block;margin:0 auto;width:200px;height:auto;background:#fff;">
+      <p class="text-xs text-gray-500 mt-3 text-center">微信扫码 → 选择金额 → 任意金额都感谢 ☕<br><span class="text-gray-400">金额随心，1元也是爱</span></p>
     </div>
     <!-- 按钮 -->
     <div class="px-6 pb-6 flex gap-3">
@@ -1703,16 +1723,19 @@ async function ensureAiModel(){
 
 // 用户上传照片后，预热AI模型（不阻塞UI）
 async function warmupAiModel(){
+  if(aiModelWarmed) return;
+  // 显示加载提示
+  showToast('🤖 AI抠图模型首次加载中（约30MB，请稍候30秒）...', 'info');
   try{
     const removeBackground = await ensureAiModel();
-    if(aiModelWarmed) return;
     // 用1x1透明PNG做预热
     const tinyPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
     await removeBackground(tinyPng, {output:{format:"image/png"}});
     aiModelWarmed = true;
-    console.log('✅ AI抠图模型预热完成');
+    showToast('✅ AI抠图模型准备就绪！现在下载就能看到头发级精修', 'success');
   }catch(e){
     console.warn('AI模型预热失败:', e);
+    showToast('⚠️ AI模型加载失败，将用备用算法', 'info');
   }
 }
 
@@ -1721,7 +1744,7 @@ async function downloadPreview(){
     showToast('请先上传照片', 'info');
     return;
   }
-  showToast('🎨 AI正在精细抠图，请稍候...', 'success');
+  showToast('🎨 AI正在精细抠图（头发丝级别），请稍候...', 'info');
   
   try{
     // 步骤1：调用浏览器端AI抠图
