@@ -1772,28 +1772,51 @@ async function downloadPreview(){
       const bitmap = await createImageBitmap(cutoutBlob);
       const bgColor = (document.querySelector('[data-bgc].active')||{}).dataset?.bgc || '#ffffff';
       
-      // === AI mask 方向自适应 ===
-      // 检测中心 50% 区域平均 alpha：人像区 alpha 应高，背景应低
-      // 如果中心 alpha 偏低，说明 mask 反了（把背景当主体了）→ 需要反色
+      // === AI mask 有效性检测 ===
+      // 模型可能返回：全空 PNG（模型未加载）/正常 mask/人像区透明
+      // 计算全图平均 alpha + 中心区域平均 alpha 判定
       const probeCanvas = document.createElement('canvas');
       probeCanvas.width = bitmap.width;
       probeCanvas.height = bitmap.height;
       const pctx = probeCanvas.getContext('2d', {willReadFrequently:true});
       pctx.drawImage(bitmap, 0, 0);
-      const probe = pctx.getImageData(bitmap.width/4, bitmap.height/4, bitmap.width/2, bitmap.height/2).data;
-      let alphaSum = 0;
-      const sampleStep = 4 * 50; // 每50像素采一个
-      let sampleCount = 0;
-      for(let i=3; i<probe.length; i+=sampleStep){ alphaSum += probe[i]; sampleCount++; }
-      const avgAlpha = sampleCount ? (alphaSum / sampleCount) : 255;
-      const maskInverted = avgAlpha < 50; // 人像几乎透明 → 反
-      console.log('中心区域平均 alpha =', avgAlpha.toFixed(1), maskInverted ? '(mask 反了，自动反色)' : '(OK)');
+      const fullImgData = pctx.getImageData(0, 0, bitmap.width, bitmap.height).data;
+      let totalAlpha = 0, sampleCount = 0;
+      const sampleStep = 4 * 20; // 采样步进：每20像素采一个
+      for(let i=3; i<fullImgData.length; i+=sampleStep){ totalAlpha += fullImgData[i]; sampleCount++; }
+      const avgAlpha = sampleCount ? (totalAlpha / sampleCount) : 0;
+      // 中心区域平均 alpha
+      const cx = bitmap.width/4, cy = bitmap.height/4;
+      const cw = bitmap.width/2, ch = bitmap.height/2;
+      const centerImgData = pctx.getImageData(cx, cy, cw, ch).data;
+      let centerAlpha = 0, centerCount = 0;
+      for(let i=3; i<centerImgData.length; i+=sampleStep){ centerAlpha += centerImgData[i]; centerCount++; }
+      const centerAvg = centerCount ? (centerAlpha / centerCount) : 0;
+      
+      // 判断逻辑：
+      // - 全图 alpha 平均 < 10 → 模型未真正输出，全空 mask，放弃 AI 走像素降级
+      // - 中心 alpha 平均 < 30 且 全图 < 60 → mask 严重异常，放弃
+      // - 中心 alpha 明显低（全图高、中心低）→ mask 反了，反色
+      // - 其他 → 正常
+      let maskMode = 'normal';
+      if(avgAlpha < 10){
+        console.warn('❌ AI抠图返回全空 mask（avgAlpha=', avgAlpha.toFixed(1), '）→ 放弃AI走像素降级');
+        throw new Error('AI抠图无效（模型未真正加载）');
+      }else if(centerAvg < 30 && avgAlpha < 60){
+        console.warn('❌ AI抠图 mask 异常（center=', centerAvg.toFixed(1), '/avg=', avgAlpha.toFixed(1), '）→ 放弃');
+        throw new Error('AI抠图结果不可用');
+      }else if(centerAvg < 50 && avgAlpha > 100){
+        maskMode = 'inverted';
+        console.log('🪞 mask 反了 → 自动反色 (center=', centerAvg.toFixed(1), '/avg=', avgAlpha.toFixed(1), ')');
+      }else{
+        console.log('✅ AI抠图正常 (center=', centerAvg.toFixed(1), '/avg=', avgAlpha.toFixed(1), ')');
+      }
       
       const finalCanvas = document.createElement('canvas');
       finalCanvas.width = bitmap.width;
       finalCanvas.height = bitmap.height;
       const fctx = finalCanvas.getContext('2d');
-      if(maskInverted){
+      if(maskMode === 'inverted'){
         // 在 bitmap 上反色 alpha：人像不透明区变透明，背景变不透明 → 然后叠原图才能得到正确抠图
         // 做法：拿 mask 作为 alpha 通道，原图 RGB 保留
         const w = bitmap.width, h = bitmap.height;
