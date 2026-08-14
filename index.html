@@ -252,6 +252,7 @@
 
     /* ===== Drag preview ===== */
     .preview-wrap{ position:relative; user-select:none; }
+.preview-wrap:hover #previewHandle{opacity:1;transform:scale(1.1);}
     .preview-handle{ position:absolute; width:24px; height:24px; border-radius:50%; background:#6366f1; border:3px solid white; cursor:move; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
     .preview-handle:active{ cursor:grabbing; }
 
@@ -483,17 +484,11 @@
           <div class="preview-wrap inline-block relative">
             <canvas id="previewCanvas" class="preview-canvas" width="560" height="720"></canvas>
             <!-- 4向十字拖动手柄（取代原来的小蓝点）-->
-            <div id="previewHandle" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);cursor:move;display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:rgba(99,102,241,0.92);border-radius:50%;box-shadow:0 4px 16px rgba(99,102,241,0.4);border:3px solid white;color:white;">
-              <div style="position:absolute;left:50%;top:8px;transform:translateX(-50%);width:2px;height:8px;background:white;"></div>
-              <div style="position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:2px;height:8px;background:white;"></div>
-              <div style="position:absolute;top:50%;left:8px;transform:translateY(-50%);width:8px;height:2px;background:white;"></div>
-              <div style="position:absolute;top:50%;right:8px;transform:translateY(-50%);width:8px;height:2px;background:white;"></div>
-              <i class="fa fa-arrows" style="font-size:14px;z-index:1;"></i>
+            <div id="previewHandle" title="按住拖动调整位置" style="position:absolute;right:10px;bottom:10px;cursor:move;display:flex;align-items:center;justify-content:center;width:38px;height:38px;background:rgba(99,102,241,0.85);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid white;color:white;opacity:0.7;transition:opacity .2s,transform .2s;">
+              <i class="fa fa-arrows" style="font-size:14px;"></i>
             </div>
             <!-- 拖动提示文字（上传后才显示）-->
-            <div id="dragHint" class="hidden absolute bottom-2 left-0 right-0 text-center text-xs text-white px-3 py-1.5 rounded-full mx-auto" style="width:fit-content;background:rgba(0,0,0,0.7);">
-              <i class="fa fa-hand-pointer-o mr-1"></i>按住十字拖动调整位置
-            </div>
+            
           </div>
           <!-- 缩放控制 -->
           <div class="mt-4 flex justify-center items-center gap-3">
@@ -992,11 +987,11 @@
       <p class="text-sm mt-1" style="color:#b45309;">如果你觉得好用，请我喝杯奶茶吧 🙏</p>
     </div>
     <!-- 收款码 -->
-    <div class="px-6 py-5">
-      <div class="bg-white rounded-xl p-3 border-2 border-dashed inline-block" style="border-color:#f59e0b;">
-        <img id="tipQRImg" src="" alt="赞赏码" class="w-52 h-auto rounded-lg">
+    <div class="px-6 py-5" style="background:#1f2937;">
+      <div class="mx-auto" style="width:240px;height:300px;display:flex;align-items:center;justify-content:center;background:#000;border-radius:12px;overflow:hidden;border:3px solid #f59e0b;box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+        <img id="tipQRImg" src="" alt="赞赏码" style="width:100%;height:100%;object-fit:contain;display:block;">
       </div>
-      <p class="text-xs text-gray-500 mt-3">微信扫码 → 选择金额 → 任意金额都感谢 ☕<br><span class="text-gray-400">金额随心，1元也是爱</span></p>
+      <p class="text-xs text-gray-300 mt-3">微信扫码 → 选择金额 → 任意金额都感谢 ☕<br><span class="text-gray-400">金额随心，1元也是爱</span></p>
     </div>
     <!-- 按钮 -->
     <div class="px-6 pb-6 flex gap-3">
@@ -1578,29 +1573,78 @@ function drawPreview(){
   const tmpCtx = tmpCanvas.getContext('2d');
   tmpCtx.drawImage(previewImage, x, y, imgW, imgH);
 
-  // 4. 像素级换底：只对落入图片矩形内的像素处理
+  // 4. 像素级换底：三重检测 + 边缘羽化（升级版）
   if(!isWhiteBg){
     const imgData = tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
     const d = imgData.data;
     const targetRgb = hexToRgb(bgColor);
+    const w = tmpCanvas.width, h = tmpCanvas.height;
+    
+    // 4.1 创建到中间层 for 边缘检测（3x3邻居）
+    const isBg = new Uint8Array(w * h); // 1=背景, 0=前景
+    
+    for(let y = 0; y < h; y++){
+      for(let x = 0; x < w; x++){
+        const i = (y * w + x) * 4;
+        const r = d[i], g = d[i+1], b = d[i+2];
+        const brightness = (r + g + b) / 3;
+        const whiteness = Math.min(r, g, b);
+        const maxChannel = Math.max(r, g, b);
+        const minChannel = Math.min(r, g, b);
+        const saturation = maxChannel === 0 ? 0 : (maxChannel - minChannel) / maxChannel;
+        
+        let isPixelBg = false;
+        // 检测1：纯白检测（白底）
+        if(whiteness > 232 && brightness > 232) isPixelBg = true;
+        // 检测2：浅灰背景（墙面阴影）
+        else if(whiteness > 215 && brightness > 215 && saturation < 0.15) isPixelBg = true;
+        // 检测3：浅灰背景（更深一点的阴影）
+        else if(whiteness > 195 && brightness > 195 && saturation < 0.10) isPixelBg = true;
+        
+        isBg[y * w + x] = isPixelBg ? 1 : 0;
+      }
+    }
+    
+    // 4.2 边缘羽化：每个背景像素检查周围是否是前景（头发丝残留）
+    // ±2像素内核
+    const radius = 2;
+    const feathered = new Float32Array(w * h); // 0=纯前景, 1=纯背景
+    
+    for(let y = 0; y < h; y++){
+      for(let x = 0; x < w; x++){
+        const idx = y * w + x;
+        if(!isBg[idx]){
+          feathered[idx] = 0; // 前景
+          continue;
+        }
+        // 统计周围前景像素比例
+        let bgNeighbors = 0, totalNeighbors = 0;
+        for(let dy = -radius; dy <= radius; dy++){
+          for(let dx = -radius; dx <= radius; dx++){
+            if(dx === 0 && dy === 0) continue;
+            const ny = y + dy, nx = x + dx;
+            if(ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
+            totalNeighbors++;
+            if(isBg[ny * w + nx]) bgNeighbors++;
+          }
+        }
+        // 纯背景 = 1，边缘（被前景包围）= 0
+        feathered[idx] = bgNeighbors / totalNeighbors;
+      }
+    }
+    
+    // 4.3 按 mask 合成
     for(let i = 0; i < d.length; i += 4){
-      const r = d[i], g = d[i+1], b = d[i+2], a = d[i+3];
-      if(a === 0) continue; // 透明像素跳过
-      const brightness = (r + g + b) / 3;
-      const whiteness = Math.min(r, g, b);
-      // 检测接近白色的像素（白底照背景）→ 替换为目标底色
-      if(whiteness > 235 && brightness > 235){
-        d[i]   = targetRgb.r;
-        d[i+1] = targetRgb.g;
-        d[i+2] = targetRgb.b;
-      }
-      // 半透明白墙阴影 → 渐变过渡
-      else if(whiteness > 200 && brightness > 200){
-        const blend = (brightness - 200) / 35; // 0~1
-        d[i]   = Math.round(d[i] * (1 - blend) + targetRgb.r * blend);
-        d[i+1] = Math.round(d[i+1] * (1 - blend) + targetRgb.g * blend);
-        d[i+2] = Math.round(d[i+2] * (1 - blend) + targetRgb.b * blend);
-      }
+      const pixIdx = i / 4;
+      const m = feathered[pixIdx]; // 0=前景（保留）, 1=背景（替换）
+      if(m <= 0.05) continue; // 纯前景，跳过
+      
+      const r = d[i], g = d[i+1], b = d[i+2];
+      // 边缘像素（m在0~1之间）: 软过渡
+      // m=0.5时：50%原色 + 50%目标色（消除白边）
+      d[i]   = Math.round(r * (1 - m) + targetRgb.r * m);
+      d[i+1] = Math.round(g * (1 - m) + targetRgb.g * m);
+      d[i+2] = Math.round(b * (1 - m) + targetRgb.b * m);
     }
     tmpCtx.putImageData(imgData, 0, 0);
   }
