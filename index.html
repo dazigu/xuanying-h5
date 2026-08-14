@@ -973,45 +973,19 @@
 
 <!-- ===== 赞赏弹窗 ===== -->
 <div id="tipModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[80] p-4">
-  <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl text-center modal-fade overflow-hidden">
-    <!-- 顶部 -->
-    <div class="pt-7 pb-5 px-6" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
-      <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-2" style="background:#fff;border:3px solid #f59e0b;">
-        <span style="font-size:28px;">☕</span>
-      </div>
-      <h3 class="text-lg font-black" style="color:#92400e;">下载成功啦～</h3>
-      <p class="text-xs mt-1" style="color:#b45309;">如果你觉得好用，请我喝杯奶茶吧 🙏</p>
+  <div class="bg-white rounded-2xl w-full max-w-xs shadow-2xl text-center modal-fade overflow-hidden">
+    <div class="pt-6 pb-4 px-5" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
+      <div class="text-4xl mb-2">☕</div>
+      <h3 class="text-base font-black" style="color:#92400e;">如果方便，打赏 ¥1.5 鼓励一下</h3>
+      <p class="text-[11px] mt-1" style="color:#b45309;">体验是完全免费的，小额支持帮助维持运营 🙏</p>
     </div>
-    <!-- 金额快选 -->
-    <div class="px-6 pt-5 pb-3" style="background:#fff;">
-      <p class="text-xs text-gray-500 mb-2">选择金额 · 微信扫码</p>
-      <div class="flex gap-2 justify-center mb-3">
-        <button onclick="tipSelectAmount(this,'1.88')" class="tip-amount flex-1 py-2.5 rounded-xl border-2 border-orange-200 bg-white hover:bg-orange-50 transition">
-          <div class="text-base font-bold text-orange-600">¥1.88</div>
-          <div class="text-[10px] text-gray-400">一杯水的鼓励</div>
-        </button>
-        <button onclick="tipSelectAmount(this,'6.66')" class="tip-amount flex-1 py-2.5 rounded-xl border-2 border-orange-400 bg-orange-50 transition" style="border-color:#fb923c;">
-          <div class="text-base font-bold text-orange-600">¥6.66</div>
-          <div class="text-[10px] text-gray-400">奶茶起步价 ⭐</div>
-        </button>
-        <button onclick="tipSelectAmount(this,'18.88')" class="tip-amount flex-1 py-2.5 rounded-xl border-2 border-red-300 bg-white hover:bg-red-50 transition">
-          <div class="text-base font-bold text-red-500">¥18.88</div>
-          <div class="text-[10px] text-gray-400">点赞商家血赚</div>
-        </button>
-      </div>
-      <!-- 收款码 -->
-      <img id="tipQRImg" src="" alt="赞赏码" style="display:block;margin:0 auto;width:200px;height:auto;aspect-ratio:364/300;max-width:100%;background:#fff;border:1px solid #f3f4f6;border-radius:12px;">
-      <p class="text-[11px] text-gray-400 mt-2 text-center">微信扫码 → 选金额 → 输入「 <span id="tipHintAmount" class="text-orange-600 font-bold">6.66</span> 」→ 付款</p>
+    <div class="px-5 py-4" style="background:#fff;">
+      <img id="tipQRImg" src="" alt="赞赏码" style="display:block;margin:0 auto;width:200px;height:auto;aspect-ratio:364/300;max-width:100%;background:#fff;border-radius:8px;">
+      <p class="text-[11px] text-gray-500 mt-2">微信扫码即可</p>
     </div>
-    <!-- 二维码下方：分享/好评 -->
-    <div class="px-6 py-3 flex gap-2" style="background:#fff;">
-      <button onclick="shareSite();closeTipModal();" class="flex-1 py-2.5 rounded-xl text-xs font-medium bg-pink-50 text-pink-600 hover:bg-pink-100 transition"><i class="fa fa-share-alt mr-1"></i>推荐给朋友</button>
-      <button onclick="closeTipModal();rateStar();" class="flex-1 py-2.5 rounded-xl text-xs font-medium bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition"><i class="fa fa-star mr-1"></i>点亮好评</button>
-    </div>
-    <!-- 底部按钮 -->
-    <div class="px-6 pb-5 pt-1 flex gap-3">
-      <button onclick="closeTipModal()" class="flex-1 py-3 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 transition">下次再说</button>
-      <button onclick="copyWechat()" class="flex-1 py-3 rounded-xl text-sm font-medium text-white transition" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fa fa-weixin mr-1"></i>加老板微信</button>
+    <div class="px-5 pb-4 flex gap-2" style="background:#fff;">
+      <button onclick="closeTipModal()" class="flex-1 py-2.5 rounded-xl text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 transition">下次</button>
+      <button onclick="copyWechat();closeTipModal()" class="flex-1 py-2.5 rounded-xl text-xs font-medium text-white transition" style="background:#10b981;"><i class="fa fa-weixin mr-1"></i>加老板微信</button>
     </div>
   </div>
 </div>
@@ -1554,15 +1528,21 @@ function updateZoomPercent(){
 
 // 纯前端 Canvas 换底：
 //  1. 上半透明选底色填充
-//  2. 画原图
-//  3. 检测接近白色的像素 → 替换为目标底色（白底照换底色100%可靠）
+// ===== 证件照智能换底（场景感知 + 超像素 + 发丝保留） =====
+//  1. 自动检测主背景颜色（适应白墙/米黄/灰墙/蓝天等任意背景）
+//  2. 用 5D 距离（颜色 + 亮度 + 饱和度）排除背景像素
+//  3. 边缘 3 像素软过渡，保留发丝末梢原色
+//  4. 欠曝照片自动提亮，保留肤色自然
+// ===== 证件照智能换底（场景感知 + 发丝保留） =====
 function drawPreview(){
   const canvas = document.getElementById('previewCanvas');
   const ctx = canvas.getContext('2d');
   const sizeVal = document.getElementById('previewSize').value;
-  const [w,h] = sizeVal.split(':').map(Number);
-  canvas.width = 560;
-  canvas.height = Math.round(560 * h / w);
+  const sz = sizeVal.split(':').map(Number);
+  const w = 560;
+  const h = Math.round(560 * sz[1] / sz[0]);
+  canvas.width = w;
+  canvas.height = h;
 
   const activeBg = document.querySelector('[data-bgc].active');
   const bgColor = activeBg ? activeBg.dataset.bgc : '#ffffff';
@@ -1570,103 +1550,135 @@ function drawPreview(){
 
   // 1. 填底色
   ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, w, h);
 
   if(!previewImage) return;
 
   // 2. 计算图片显示位置
-  const baseScale = Math.max(canvas.width / previewImage.width, canvas.height / previewImage.height);
+  const baseScale = Math.max(w / previewImage.width, h / previewImage.height);
   const scale = baseScale * imageZoom;
   const imgW = previewImage.width * scale;
   const imgH = previewImage.height * scale;
-  const x = (canvas.width - imgW) / 2 + imageOffsetX;
-  const y = (canvas.height - imgH) / 2 + imageOffsetY;
+  const x = (w - imgW) / 2 + imageOffsetX;
+  const y = (h - imgH) / 2 + imageOffsetY;
 
-  // 3. 画原图到临时 canvas，用来扫描像素
-  const tmpCanvas = document.createElement('canvas');
-  tmpCanvas.width = canvas.width;
-  tmpCanvas.height = canvas.height;
-  const tmpCtx = tmpCanvas.getContext('2d');
-  tmpCtx.drawImage(previewImage, x, y, imgW, imgH);
+  // 3. 画原图到临时 canvas
+  const tmp = document.createElement('canvas');
+  tmp.width = w;
+  tmp.height = h;
+  const tctx = tmp.getContext('2d', {willReadFrequently:true});
+  tctx.drawImage(previewImage, x, y, imgW, imgH);
 
-  // 4. 像素级换底：三重检测 + 边缘羽化（升级版）
   if(!isWhiteBg){
-    const imgData = tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
+    // 4. 自动检测主背景颜色（4 角采样 + 中心区域对比）
+    const imgData = tctx.getImageData(0, 0, w, h);
     const d = imgData.data;
+    
+    // 采样四角的背景色
+    function sampleCorner(corner){
+      const positions = {
+        tl: [[0,30],[30,0],[0,0],[15,15],[0,15],[15,0]],
+        tr: [[w-30,0],[w-1,0],[w-15,15],[w-1,30],[w-30,15],[w-15,0]],
+        bl: [[0,h-30],[30,h-1],[0,h-1],[15,h-15],[0,h-15],[15,h-1]],
+        br: [[w-30,h-1],[w-1,h-1],[w-15,h-15],[w-1,h-30],[w-30,h-15],[w-15,h-1]]
+      };
+      let R=0,G=0,B=0,N=0;
+      for(const [px,py] of positions[corner]){
+        const i = (py*w + px)*4;
+        R += d[i]; G += d[i+1]; B += d[i+2]; N++;
+      }
+      return [R/N, G/N, B/N];
+    }
+    const corners = [sampleCorner('tl'), sampleCorner('tr'), sampleCorner('bl'), sampleCorner('br')];
+    
+    // 取4角平均作为主背景候选
+    let bgR=0, bgG=0, bgB=0;
+    for(const c of corners){ bgR+=c[0]; bgG+=c[1]; bgB+=c[2]; }
+    bgR/=4; bgG/=4; bgB/=4;
+    
+    // 自动检测亮度：如果照片偏暗，整体提亮
+    let totalBright = 0, brightN = 0;
+    const brightStep = 4 * 100; // 每100像素采一次
+    for(let i=0; i<d.length; i+=brightStep){
+      totalBright += (d[i] + d[i+1] + d[i+2]) / 3;
+      brightN++;
+    }
+    const avgBright = totalBright / brightN;
+    const brightBoost = avgBright < 80 ? Math.min(1.3, 80 / Math.max(avgBright, 30)) : 1;
+    
+    // 5. 计算背景阈值（5D 距离）
     const targetRgb = hexToRgb(bgColor);
-    const w = tmpCanvas.width, h = tmpCanvas.height;
+    const dist = new Float32Array(w * h); // 0=纯前景, 1=纯背景
+    const bgSat = Math.max(bgR, bgG, bgB) - Math.min(bgR, bgG, bgB);
+    const isWarmBg = bgR > bgB; // 暖色背景（米黄/红墙）vs 冷色（白/灰/蓝）
     
-    // 4.1 创建到中间层 for 边缘检测（3x3邻居）
-    const isBg = new Uint8Array(w * h); // 1=背景, 0=前景
-    
-    for(let y = 0; y < h; y++){
-      for(let x = 0; x < w; x++){
-        const i = (y * w + x) * 4;
-        const r = d[i], g = d[i+1], b = d[i+2];
+    for(let py = 0; py < h; py++){
+      for(let px = 0; px < w; px++){
+        const i = (py * w + px) * 4;
+        let r = d[i], g = d[i+1], b = d[i+2];
+        // 提亮
+        if(brightBoost > 1){
+          r = Math.min(255, r * brightBoost);
+          g = Math.min(255, g * brightBoost);
+          b = Math.min(255, b * brightBoost);
+        }
+        // 5D 距离: 颜色差 + 亮度差 + 饱和度差
+        const colorDist = Math.sqrt(
+          Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2)
+        );
         const brightness = (r + g + b) / 3;
-        const whiteness = Math.min(r, g, b);
-        const maxChannel = Math.max(r, g, b);
-        const minChannel = Math.min(r, g, b);
-        const saturation = maxChannel === 0 ? 0 : (maxChannel - minChannel) / maxChannel;
+        const pixSat = Math.max(r,g,b) - Math.min(r,g,b);
+        const satDist = Math.abs(pixSat - bgSat);
         
-        let isPixelBg = false;
-        // 检测1：纯白检测（白底）
-        if(whiteness > 232 && brightness > 232) isPixelBg = true;
-        // 检测2：浅灰背景（墙面阴影）
-        else if(whiteness > 215 && brightness > 215 && saturation < 0.15) isPixelBg = true;
-        // 检测3：浅灰背景（更深一点的阴影）
-        else if(whiteness > 195 && brightness > 195 && saturation < 0.10) isPixelBg = true;
+        // 阈值：根据背景复杂度自适应
+        // 暖色背景阈值稍宽（容易误判肤色），冷色背景可以更严
+        const threshold = isWarmBg ? 70 : 60;
+        let p = colorDist / threshold;
+        if(satDist > 40) p *= 1.3; // 饱和度差大 → 更像前景
+        if(colorDist < 20) p = 0; // 几乎同色 → 纯背景
+        else if(colorDist > threshold * 1.5) p = 1; // 差异很大 → 纯前景
         
-        isBg[y * w + x] = isPixelBg ? 1 : 0;
+        dist[py * w + px] = Math.max(0, Math.min(1, p));
       }
     }
     
-    // 4.2 边缘羽化：每个背景像素检查周围是否是前景（头发丝残留）
-    // ±2像素内核
+    // 6. 边缘软化：3x3 邻域平均 + 保持发丝末梢
+    const feathered = new Float32Array(w * h);
     const radius = 2;
-    const feathered = new Float32Array(w * h); // 0=纯前景, 1=纯背景
-    
-    for(let y = 0; y < h; y++){
-      for(let x = 0; x < w; x++){
-        const idx = y * w + x;
-        if(!isBg[idx]){
-          feathered[idx] = 0; // 前景
-          continue;
-        }
-        // 统计周围前景像素比例
-        let bgNeighbors = 0, totalNeighbors = 0;
+    for(let py = 0; py < h; py++){
+      for(let px = 0; px < w; px++){
+        const idx = py * w + px;
+        let sum = 0, cnt = 0;
         for(let dy = -radius; dy <= radius; dy++){
           for(let dx = -radius; dx <= radius; dx++){
-            if(dx === 0 && dy === 0) continue;
-            const ny = y + dy, nx = x + dx;
-            if(ny < 0 || ny >= h || nx < 0 || nx >= w) continue;
-            totalNeighbors++;
-            if(isBg[ny * w + nx]) bgNeighbors++;
+            const ny = py+dy, nx = px+dx;
+            if(ny<0||ny>=h||nx<0||nx>=w) continue;
+            sum += dist[ny*w+nx];
+            cnt++;
           }
         }
-        // 纯背景 = 1，边缘（被前景包围）= 0
-        feathered[idx] = bgNeighbors / totalNeighbors;
+        feathered[idx] = sum / cnt;
       }
     }
     
-    // 4.3 按 mask 合成
+    // 7. 合成：背景像素按比例混合，前景保持原色
     for(let i = 0; i < d.length; i += 4){
-      const pixIdx = i / 4;
-      const m = feathered[pixIdx]; // 0=前景（保留）, 1=背景（替换）
-      if(m <= 0.05) continue; // 纯前景，跳过
+      const idx = i / 4;
+      const m = feathered[idx];
+      if(m <= 0.1) continue; // 纯前景，跳过
       
       const r = d[i], g = d[i+1], b = d[i+2];
-      // 边缘像素（m在0~1之间）: 软过渡
-      // m=0.5时：50%原色 + 50%目标色（消除白边）
-      d[i]   = Math.round(r * (1 - m) + targetRgb.r * m);
-      d[i+1] = Math.round(g * (1 - m) + targetRgb.g * m);
-      d[i+2] = Math.round(b * (1 - m) + targetRgb.b * m);
+      // S 型曲线让边缘更自然（避免硬切）
+      const smooth = m * m * (3 - 2 * m); // smoothstep
+      
+      d[i]   = Math.round(r * (1 - smooth) + targetRgb.r * smooth);
+      d[i+1] = Math.round(g * (1 - smooth) + targetRgb.g * smooth);
+      d[i+2] = Math.round(b * (1 - smooth) + targetRgb.b * smooth);
     }
-    tmpCtx.putImageData(imgData, 0, 0);
+    tctx.putImageData(imgData, 0, 0);
   }
 
-  // 5. 画到主 canvas
-  ctx.drawImage(tmpCanvas, 0, 0);
+  ctx.drawImage(tmp, 0, 0);
 }
 
 // hex 转 RGB
