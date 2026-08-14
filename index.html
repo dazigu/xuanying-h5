@@ -1771,13 +1771,61 @@ async function downloadPreview(){
       // 直接用 createImageBitmap 加载 Blob，避免 Image.src 路径出错
       const bitmap = await createImageBitmap(cutoutBlob);
       const bgColor = (document.querySelector('[data-bgc].active')||{}).dataset?.bgc || '#ffffff';
+      
+      // === AI mask 方向自适应 ===
+      // 检测中心 50% 区域平均 alpha：人像区 alpha 应高，背景应低
+      // 如果中心 alpha 偏低，说明 mask 反了（把背景当主体了）→ 需要反色
+      const probeCanvas = document.createElement('canvas');
+      probeCanvas.width = bitmap.width;
+      probeCanvas.height = bitmap.height;
+      const pctx = probeCanvas.getContext('2d', {willReadFrequently:true});
+      pctx.drawImage(bitmap, 0, 0);
+      const probe = pctx.getImageData(bitmap.width/4, bitmap.height/4, bitmap.width/2, bitmap.height/2).data;
+      let alphaSum = 0;
+      const sampleStep = 4 * 50; // 每50像素采一个
+      let sampleCount = 0;
+      for(let i=3; i<probe.length; i+=sampleStep){ alphaSum += probe[i]; sampleCount++; }
+      const avgAlpha = sampleCount ? (alphaSum / sampleCount) : 255;
+      const maskInverted = avgAlpha < 50; // 人像几乎透明 → 反
+      console.log('中心区域平均 alpha =', avgAlpha.toFixed(1), maskInverted ? '(mask 反了，自动反色)' : '(OK)');
+      
       const finalCanvas = document.createElement('canvas');
       finalCanvas.width = bitmap.width;
       finalCanvas.height = bitmap.height;
       const fctx = finalCanvas.getContext('2d');
-      fctx.fillStyle = bgColor;
-      fctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-      fctx.drawImage(bitmap, 0, 0);
+      if(maskInverted){
+        // 在 bitmap 上反色 alpha：人像不透明区变透明，背景变不透明 → 然后叠原图才能得到正确抠图
+        // 做法：拿 mask 作为 alpha 通道，原图 RGB 保留
+        const w = bitmap.width, h = bitmap.height;
+        const probeFull = pctx.getImageData(0, 0, w, h);
+        // 原图（在合成中已经被画过底色，但我们这里拿的是 cutoutBlob，理论上是透明背景的纯人像）
+        // 由于 cutoutBlob 本身就是透明背景人像（或反），直接反转其 alpha 即可
+        for(let i=3; i<probeFull.data.length; i+=4){
+          probeFull.data[i] = 255 - probeFull.data[i];
+        }
+        // 把反转后的 mask alpha 跟原图 RGB 组合：用 cutoutBlob 原图 + 反转 alpha
+        // 简单做法：重新画原图，再用反转的 alpha 作为 globalCompositeOperation
+        const srcImg = await createImageBitmap(cutoutBlob);
+        fctx.drawImage(srcImg, 0, 0);
+        srcImg.close && srcImg.close();
+        const maskOnly = new ImageData(probeFull.data, w, h);
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = w; maskCanvas.height = h;
+        maskCanvas.getContext('2d').putImageData(maskOnly, 0, 0);
+        // 把反转 alpha 作为选区：destination-in 保留原图 RGB，反转 mask 控制透明度
+        fctx.globalCompositeOperation = 'destination-in';
+        fctx.drawImage(maskCanvas, 0, 0);
+        fctx.globalCompositeOperation = 'source-over';
+        // 现在 finalCanvas 上是正确抠出的人像（透明背景），填底色
+        fctx.globalCompositeOperation = 'destination-over';
+        fctx.fillStyle = bgColor;
+        fctx.fillRect(0, 0, w, h);
+        fctx.globalCompositeOperation = 'source-over';
+      }else{
+        fctx.fillStyle = bgColor;
+        fctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        fctx.drawImage(bitmap, 0, 0);
+      }
       bitmap.close && bitmap.close();
       finalBase64 = finalCanvas.toDataURL('image/png', 1.0);
     }catch(innerErr){
@@ -1785,13 +1833,19 @@ async function downloadPreview(){
       throw innerErr;
     }
     
-    // 步骤3：下载
-    const a = document.createElement('a');
-    a.href = finalBase64;
-    a.download = '证件照_' + Date.now() + '.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // 步骤3：下载（容错处理：外部脚本报错不阻断下载）
+    try{
+      const a = document.createElement('a');
+      a.href = finalBase64;
+      a.download = '证件照_' + Date.now() + '.png';
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>document.body.removeChild(a), 100);
+    }catch(dlErr){
+      console.warn('下载触发异常，但文件已生成：', dlErr);
+    }
     
     showToast('✅ 已下载，满意的话请我喝杯奶茶 🙏', 'success');
     setTimeout(()=>showTipModal(), 600);
