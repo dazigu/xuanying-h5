@@ -1725,16 +1725,17 @@ async function ensureAiModel(){
 async function warmupAiModel(){
   if(aiModelWarmed) return;
   // 显示加载提示
-  showToast('🤖 AI抠图模型首次加载中（约30MB，请稍候30秒）...', 'info');
+  showToast('🤖 AI抠图模型首次加载中（约10MB，请稍候30秒）...', 'info');
   try{
     const removeBackground = await ensureAiModel();
     // 用1x1透明PNG做预热
     const tinyPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-    await removeBackground(tinyPng, {output:{format:"image/png"}});
+    await removeBackground(tinyPng, {output:{format:"image/png", quality:0.8}, model:'isnet_quint8'});
     aiModelWarmed = true;
     showToast('✅ AI抠图模型准备就绪！现在下载就能看到头发级精修', 'success');
   }catch(e){
     console.warn('AI模型预热失败:', e);
+    aiModelWarmed = false;
     showToast('⚠️ AI模型加载失败，将用备用算法', 'info');
   }
 }
@@ -1753,11 +1754,32 @@ async function downloadPreview(){
       const removeBackground = await ensureAiModel();
       if(!removeBackground) throw new Error('AI模型未就绪');
       const srcBase64 = canvasToBase64(document.getElementById('previewCanvas'));
-      const cutoutBase64 = await removeBackground(srcBase64, {
-        output:{format:"image/png", quality:1}
+      
+      // 加 30 秒超时保护：太久就降级
+      const aiTask = removeBackground(srcBase64, {
+        output:{format:"image/png", quality:0.95},
+        model:'isnet_quint8'
       });
-      // 合成到选定底色上（若抠图为空会抛错，降级）
-      finalBase64 = await compositeWithBg(cutoutBase64);
+      const timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error('AI抠图超时')), 30000));
+      const cutoutBlob = await Promise.race([aiTask, timeout]);
+      
+      if(!(cutoutBlob instanceof Blob) || cutoutBlob.size < 100){
+        throw new Error('AI抠图结果无效（'+ (cutoutBlob && cutoutBlob.size) +' bytes）');
+      }
+      console.log('AI抠图返回 Blob:', cutoutBlob.size, 'bytes');
+      
+      // 直接用 createImageBitmap 加载 Blob，避免 Image.src 路径出错
+      const bitmap = await createImageBitmap(cutoutBlob);
+      const bgColor = (document.querySelector('[data-bgc].active')||{}).dataset?.bgc || '#ffffff';
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = bitmap.width;
+      finalCanvas.height = bitmap.height;
+      const fctx = finalCanvas.getContext('2d');
+      fctx.fillStyle = bgColor;
+      fctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+      fctx.drawImage(bitmap, 0, 0);
+      bitmap.close && bitmap.close();
+      finalBase64 = finalCanvas.toDataURL('image/png', 1.0);
     }catch(innerErr){
       console.warn('AI抠图不可用，降级为像素换底', innerErr);
       throw innerErr;
