@@ -1534,6 +1534,9 @@ function updateZoomPercent(){
 //  3. 边缘 3 像素软过渡，保留发丝末梢原色
 //  4. 欠曝照片自动提亮，保留肤色自然
 // ===== 证件照智能换底（场景感知 + 发丝保留） =====
+// ===== 证件照智能换底（白底照专用 + 发丝柔化） =====
+// 核心策略：只在白底/浅灰背景下换底，其他颜色保持原图
+// 避免误把肤色当背景
 function drawPreview(){
   const canvas = document.getElementById('previewCanvas');
   const ctx = canvas.getContext('2d');
@@ -1546,7 +1549,6 @@ function drawPreview(){
 
   const activeBg = document.querySelector('[data-bgc].active');
   const bgColor = activeBg ? activeBg.dataset.bgc : '#ffffff';
-  const isWhiteBg = bgColor.toLowerCase() === '#ffffff' || bgColor.toLowerCase() === '#fff';
 
   // 1. 填底色
   ctx.fillStyle = bgColor;
@@ -1569,114 +1571,38 @@ function drawPreview(){
   const tctx = tmp.getContext('2d', {willReadFrequently:true});
   tctx.drawImage(previewImage, x, y, imgW, imgH);
 
-  if(!isWhiteBg){
-    // 4. 自动检测主背景颜色（4 角采样 + 中心区域对比）
-    const imgData = tctx.getImageData(0, 0, w, h);
-    const d = imgData.data;
-    
-    // 采样四角的背景色
-    function sampleCorner(corner){
-      const positions = {
-        tl: [[0,30],[30,0],[0,0],[15,15],[0,15],[15,0]],
-        tr: [[w-30,0],[w-1,0],[w-15,15],[w-1,30],[w-30,15],[w-15,0]],
-        bl: [[0,h-30],[30,h-1],[0,h-1],[15,h-15],[0,h-15],[15,h-1]],
-        br: [[w-30,h-1],[w-1,h-1],[w-15,h-15],[w-1,h-30],[w-30,h-15],[w-15,h-1]]
-      };
-      let R=0,G=0,B=0,N=0;
-      for(const [px,py] of positions[corner]){
-        const i = (py*w + px)*4;
-        R += d[i]; G += d[i+1]; B += d[i+2]; N++;
-      }
-      return [R/N, G/N, B/N];
-    }
-    const corners = [sampleCorner('tl'), sampleCorner('tr'), sampleCorner('bl'), sampleCorner('br')];
-    
-    // 取4角平均作为主背景候选
-    let bgR=0, bgG=0, bgB=0;
-    for(const c of corners){ bgR+=c[0]; bgG+=c[1]; bgB+=c[2]; }
-    bgR/=4; bgG/=4; bgB/=4;
-    
-    // 自动检测亮度：如果照片偏暗，整体提亮
-    let totalBright = 0, brightN = 0;
-    const brightStep = 4 * 100; // 每100像素采一次
-    for(let i=0; i<d.length; i+=brightStep){
-      totalBright += (d[i] + d[i+1] + d[i+2]) / 3;
-      brightN++;
-    }
-    const avgBright = totalBright / brightN;
-    const brightBoost = avgBright < 80 ? Math.min(1.3, 80 / Math.max(avgBright, 30)) : 1;
-    
-    // 5. 计算背景阈值（5D 距离）
-    const targetRgb = hexToRgb(bgColor);
-    const dist = new Float32Array(w * h); // 0=纯前景, 1=纯背景
-    const bgSat = Math.max(bgR, bgG, bgB) - Math.min(bgR, bgG, bgB);
-    const isWarmBg = bgR > bgB; // 暖色背景（米黄/红墙）vs 冷色（白/灰/蓝）
-    
-    for(let py = 0; py < h; py++){
-      for(let px = 0; px < w; px++){
-        const i = (py * w + px) * 4;
-        let r = d[i], g = d[i+1], b = d[i+2];
-        // 提亮
-        if(brightBoost > 1){
-          r = Math.min(255, r * brightBoost);
-          g = Math.min(255, g * brightBoost);
-          b = Math.min(255, b * brightBoost);
-        }
-        // 5D 距离: 颜色差 + 亮度差 + 饱和度差
-        const colorDist = Math.sqrt(
-          Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2)
-        );
-        const brightness = (r + g + b) / 3;
-        const pixSat = Math.max(r,g,b) - Math.min(r,g,b);
-        const satDist = Math.abs(pixSat - bgSat);
-        
-        // 阈值：根据背景复杂度自适应
-        // 暖色背景阈值稍宽（容易误判肤色），冷色背景可以更严
-        const threshold = isWarmBg ? 70 : 60;
-        let p = colorDist / threshold;
-        if(satDist > 40) p *= 1.3; // 饱和度差大 → 更像前景
-        if(colorDist < 20) p = 0; // 几乎同色 → 纯背景
-        else if(colorDist > threshold * 1.5) p = 1; // 差异很大 → 纯前景
-        
-        dist[py * w + px] = Math.max(0, Math.min(1, p));
-      }
-    }
-    
-    // 6. 边缘软化：3x3 邻域平均 + 保持发丝末梢
-    const feathered = new Float32Array(w * h);
-    const radius = 2;
-    for(let py = 0; py < h; py++){
-      for(let px = 0; px < w; px++){
-        const idx = py * w + px;
-        let sum = 0, cnt = 0;
-        for(let dy = -radius; dy <= radius; dy++){
-          for(let dx = -radius; dx <= radius; dx++){
-            const ny = py+dy, nx = px+dx;
-            if(ny<0||ny>=h||nx<0||nx>=w) continue;
-            sum += dist[ny*w+nx];
-            cnt++;
-          }
-        }
-        feathered[idx] = sum / cnt;
-      }
-    }
-    
-    // 7. 合成：背景像素按比例混合，前景保持原色
-    for(let i = 0; i < d.length; i += 4){
-      const idx = i / 4;
-      const m = feathered[idx];
-      if(m <= 0.1) continue; // 纯前景，跳过
-      
-      const r = d[i], g = d[i+1], b = d[i+2];
-      // S 型曲线让边缘更自然（避免硬切）
-      const smooth = m * m * (3 - 2 * m); // smoothstep
-      
-      d[i]   = Math.round(r * (1 - smooth) + targetRgb.r * smooth);
-      d[i+1] = Math.round(g * (1 - smooth) + targetRgb.g * smooth);
-      d[i+2] = Math.round(b * (1 - smooth) + targetRgb.b * smooth);
-    }
-    tctx.putImageData(imgData, 0, 0);
+  // 4. 仅替换接近白色的像素（白底照专用，保护肤色）
+  const imgData = tctx.getImageData(0, 0, w, h);
+  const d = imgData.data;
+  const targetRgb = hexToRgb(bgColor);
+
+  for(let i = 0; i < d.length; i += 4){
+    const r = d[i], g = d[i+1], b = d[i+2];
+    const brightness = (r + g + b) / 3;
+    const whiteness = Math.min(r, g, b);
+    const maxChannel = Math.max(r, g, b);
+    const minChannel = Math.min(r, g, b);
+    const saturation = maxChannel === 0 ? 0 : (maxChannel - minChannel) / maxChannel;
+
+    // 严格判定：纯白/浅灰背景，且饱和度极低
+    const isLightBg = whiteness >= 200 && brightness >= 200 && saturation < 0.10;
+    if(!isLightBg) continue;
+
+    // 平滑过渡：whiteness 越高越像背景
+    let m;
+    if(whiteness >= 240 && brightness >= 240) m = 1.0;
+    else if(whiteness >= 220) m = 0.85;
+    else if(whiteness >= 210) m = 0.6;
+    else m = 0.3;
+
+    // smoothstep 让边缘更自然
+    m = m * m * (3 - 2 * m);
+
+    d[i]   = Math.round(r * (1 - m) + targetRgb.r * m);
+    d[i+1] = Math.round(g * (1 - m) + targetRgb.g * m);
+    d[i+2] = Math.round(b * (1 - m) + targetRgb.b * m);
   }
+  tctx.putImageData(imgData, 0, 0);
 
   ctx.drawImage(tmp, 0, 0);
 }
