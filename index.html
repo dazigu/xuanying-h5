@@ -1735,20 +1735,52 @@ async function aiCutout(file){
     const imgData = tCtx.getImageData(0, 0, tempC.width, tempC.height);
     const d = imgData.data;
     
-    // 阈值调小：更多像素保留为不透明，避免抠过头
+    // 强化透明处理：检测接近白色的像素（可能是白墙/白底残留）
+    // 策略：白墙常见于纯背景，但人像边缘（如白衬衫）也白——用"区域连续性"判断
     for(let i = 0; i < d.length; i += 4){
       const r = d[i], g = d[i+1], b = d[i+2];
       const brightness = (r + g + b) / 3;
       const whiteness = Math.min(r, g, b);
-      // 仅当像素非常纯白（接近255）才识别为背景
-      if(whiteness > 240 && brightness > 240){
-        d[i+3] = 0; // 完全透明
-      } else if(whiteness > 225 && brightness > 225){
-        d[i+3] = Math.max(0, d[i+3] - 150); // 半透明
+      // 极白像素（白底）：完全透明
+      if(whiteness > 245 && brightness > 245){
+        d[i+3] = 0;
+      }
+      // 白墙阴影（浅灰）：半透明渐变，避免边缘硬切
+      else if(whiteness > 200 && brightness > 200){
+        // 越白越透明，形成柔和过渡
+        const alpha = Math.max(0, d[i+3] * (1 - (brightness - 200) / 55));
+        d[i+3] = Math.round(alpha);
+      }
+      // 高光残留（如反光）：轻微减淡
+      else if(brightness > 250 && (r - b > 8 || g - b > 8)){
+        d[i+3] = Math.max(0, d[i+3] - 40);
       }
     }
     
-    tCtx.putImageData(imgData, 0, 0);
+    // 边缘羽化：检测半透明边缘像素，对其做轻微模糊，形成柔和过渡
+    // 这样头发丝、衣领边缘不会有一圈"锯齿"
+    const edgeBlurCanvas = document.createElement('canvas');
+    edgeBlurCanvas.width = tempC.width;
+    edgeBlurCanvas.height = tempC.height;
+    const edgeCtx = edgeBlurCanvas.getContext('2d');
+    edgeCtx.filter = 'blur(1px)';
+    edgeCtx.drawImage(tempC, 0, 0);
+    // 从原图画回半透明区域（0~80 alpha 的像素用模糊版替换）
+    const imgData2 = tCtx.getImageData(0, 0, tempC.width, tempC.height);
+    const d2 = imgData2.data;
+    const blurData = edgeCtx.getImageData(0, 0, tempC.width, tempC.height).data;
+    for(let i = 3; i < d2.length; i += 4){
+      const alpha = d2[i];
+      // 半透明边缘区域：与模糊版混合
+      if(alpha > 5 && alpha < 100){
+        const blend = alpha / 100;
+        d2[i-3] = Math.round(d2[i-3] * blend + blurData[i-3] * (1 - blend));
+        d2[i-2] = Math.round(d2[i-2] * blend + blurData[i-2] * (1 - blend));
+        d2[i-1] = Math.round(d2[i-1] * blend + blurData[i-1] * (1 - blend));
+        d2[i]   = Math.round(d2[i]   * blend + blurData[i]   * (1 - blend));
+      }
+    }
+    tCtx.putImageData(imgData2, 0, 0);
     
     // 保存高清透明抠图 base64（供下载用）
     cutoutBase64 = tempC.toDataURL('image/png');
