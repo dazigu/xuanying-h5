@@ -6,6 +6,17 @@
   <title>炫影照相馆 - 在线证件照</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📸</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  // 懒加载 @imgly/background-removal（首次用浏览器端AI抠图）
+  // 模块按需导入，不阻塞首屏
+  window.__loadImgly = async function(){
+    if(window.imglyLoaded) return window.imglyLoaded;
+    if(window.imglyLoading) return window.imglyLoading;
+    const m = await import('https://cdn.jsdelivr.net/npm/@imgly/[email protected]/+esm');
+    window.imglyLoaded = m.removeBackground;
+    return m.removeBackground;
+  };
+</script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script>
@@ -1487,11 +1498,16 @@ async function handlePreviewUpload(input){
   // 直接加载原图，不调 AI（稳、快、不出错）
   previewImage = new Image();
   previewImage.onload = function(){
-    fn.innerText = '✓ 已加载照片 · 请选择底色';
-    showToast('照片已加载，点击下方底色试效果', 'success');
+    fn.innerText = '✓ 已加载照片 · 准备中...';
     imageZoom = 1; imageOffsetX = 0; imageOffsetY = 0;
     updateZoomPercent();
     drawPreview();
+    fn.innerText = '✓ 已加载照片 · 请选择底色';
+    showToast('照片已加载，点击下方底色试效果', 'success');
+    // 后台预热AI模型（不阻塞UI）
+    if(!aiModelWarmed){
+      setTimeout(()=>warmupAiModel(), 100);
+    }
   };
   previewImage.onerror = function(){
     fn.innerText = '✗ 图片加载失败';
@@ -1675,29 +1691,106 @@ function resetPreview(){
 }
 
 // 直接下载当前预览图（Canvas 合成，无水印）
-function downloadPreview(){
+// ===== 下载前用浏览器端AI抠图（@imgly） =====
+let aiModelWarmed = false; // 标记模型是否已预热
+async function ensureAiModel(){
+  if(window.imglyLoaded) return window.imglyLoaded;
+  if(!window.imglyLoading){
+    window.imglyLoading = window.__loadImgly();
+  }
+  return window.imglyLoading;
+}
+
+// 用户上传照片后，预热AI模型（不阻塞UI）
+async function warmupAiModel(){
+  try{
+    const removeBackground = await ensureAiModel();
+    if(aiModelWarmed) return;
+    // 用1x1透明PNG做预热
+    const tinyPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    await removeBackground(tinyPng, {output:{format:"image/png"}});
+    aiModelWarmed = true;
+    console.log('✅ AI抠图模型预热完成');
+  }catch(e){
+    console.warn('AI模型预热失败:', e);
+  }
+}
+
+async function downloadPreview(){
   if(!previewImage){
     showToast('请先上传照片', 'info');
     return;
   }
-  const canvas = document.getElementById('previewCanvas');
-  canvas.toBlob(blob=>{
-    if(!blob){
-      showToast('生成失败，请重试', 'error');
-      return;
-    }
-    const url = URL.createObjectURL(blob);
+  showToast('🎨 AI正在精细抠图，请稍候...', 'success');
+  
+  try{
+    // 步骤1：调用浏览器端AI抠图
+    const removeBackground = await ensureAiModel();
+    const srcBase64 = canvasToBase64(document.getElementById('previewCanvas'));
+    
+    const cutoutBase64 = await removeBackground(srcBase64, {
+      output:{format:"image/png", quality:1}
+    });
+    
+    // 步骤2：把抠图（透明PNG）+ 选定底色合成为最终证件照
+    const finalBase64 = await compositeWithBg(cutoutBase64);
+    
+    // 步骤3：下载
     const a = document.createElement('a');
-    a.href = url;
+    a.href = finalBase64;
     a.download = '证件照_' + Date.now() + '.png';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    
     showToast('✅ 已下载，满意的话请我喝杯奶茶 🙏', 'success');
-    // 弹出赞赏窗
     setTimeout(()=>showTipModal(), 600);
-  }, 'image/png', 0.95);
+  }catch(e){
+    console.error('AI抠图失败，降级为像素算法', e);
+    showToast('⚠️ 网络慢，用备用算法生成', 'info');
+    // 降级：直接用canvas导出（不抠图，像素换底）
+    const canvas = document.getElementById('previewCanvas');
+    canvas.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '证件照_' + Date.now() + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      showToast('✅ 已下载', 'success');
+      setTimeout(()=>showTipModal(), 600);
+    }, 'image/png', 0.95);
+  }
+}
+
+// Canvas转base64
+function canvasToBase64(canvas){
+  return canvas.toDataURL('image/png');
+}
+
+// 把透明PNG合成到指定底色上，返回base64
+async function compositeWithBg(cutoutBase64){
+  const bgColor = (document.querySelector('[data-bgc].active')||{}).dataset?.bgc || '#ffffff';
+  
+  const cutout = new Image();
+  cutout.src = cutoutBase64;
+  await new Promise(r=>{cutout.onload=r; cutout.onerror=r;});
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = cutout.naturalWidth;
+  canvas.height = cutout.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  
+  // 1. 填底色
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // 2. 叠抠图（透明像素自动透出底色）
+  ctx.drawImage(cutout, 0, 0);
+  
+  return canvas.toDataURL('image/png', 1.0);
 }
 
 
