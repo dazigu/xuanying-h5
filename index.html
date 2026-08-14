@@ -1021,7 +1021,7 @@ window.__loadImgly = async function(){
     </div>
     <!-- 收款码 -->
     <div class="px-6 py-4" style="background:#fff;">
-      <img id="tipQRImg" src="" alt="赞赏码" style="display:block;margin:0 auto;width:200px;height:auto;background:#fff;">
+      <img id="tipQRImg" src="" alt="赞赏码" style="display:block;margin:0 auto;width:200px;height:auto;aspect-ratio:364/300;max-width:100%;background:#fff;">
       <p class="text-xs text-gray-500 mt-3 text-center">微信扫码 → 选择金额 → 任意金额都感谢 ☕<br><span class="text-gray-400">金额随心，1元也是爱</span></p>
     </div>
     <!-- 按钮 -->
@@ -1747,16 +1747,21 @@ async function downloadPreview(){
   showToast('🎨 AI正在精细抠图（头发丝级别），请稍候...', 'info');
   
   try{
-    // 步骤1：调用浏览器端AI抠图
-    const removeBackground = await ensureAiModel();
-    const srcBase64 = canvasToBase64(document.getElementById('previewCanvas'));
-    
-    const cutoutBase64 = await removeBackground(srcBase64, {
-      output:{format:"image/png", quality:1}
-    });
-    
-    // 步骤2：把抠图（透明PNG）+ 选定底色合成为最终证件照
-    const finalBase64 = await compositeWithBg(cutoutBase64);
+    // 步骤1：尝试调用浏览器端AI抠图（如果模型已加载）
+    let finalBase64;
+    try{
+      const removeBackground = await ensureAiModel();
+      if(!removeBackground) throw new Error('AI模型未就绪');
+      const srcBase64 = canvasToBase64(document.getElementById('previewCanvas'));
+      const cutoutBase64 = await removeBackground(srcBase64, {
+        output:{format:"image/png", quality:1}
+      });
+      // 合成到选定底色上（若抠图为空会抛错，降级）
+      finalBase64 = await compositeWithBg(cutoutBase64);
+    }catch(innerErr){
+      console.warn('AI抠图不可用，降级为像素换底', innerErr);
+      throw innerErr;
+    }
     
     // 步骤3：下载
     const a = document.createElement('a');
@@ -1799,7 +1804,10 @@ async function compositeWithBg(cutoutBase64){
   
   const cutout = new Image();
   cutout.src = cutoutBase64;
-  await new Promise(r=>{cutout.onload=r; cutout.onerror=r;});
+  await new Promise((resolve,reject)=>{
+    cutout.onload = ()=>{ if(cutout.naturalWidth>0 && cutout.naturalHeight>0) resolve(); else reject(new Error('AI抠图结果为空')); };
+    cutout.onerror = ()=>reject(new Error('AI抠图结果加载失败'));
+  });
   
   const canvas = document.createElement('canvas');
   canvas.width = cutout.naturalWidth;
