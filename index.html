@@ -6,39 +6,6 @@
   <title>炫影照相馆 - 在线证件照</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📸</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
-<!-- @imgly 浏览器端 AI 抠图（懒加载，~30MB 首次）-->
-<script>
-window.__loadImgly = async function(){
-  if(window.imglyLoaded) return window.imglyLoaded;
-  if(window.imglyLoading) return window.imglyLoading;
-  console.log('🤖 正在加载AI抠图模型（首次约30MB，请稍候）...');
-  window.imglyLoading = new Promise((resolve, reject)=>{
-    const s = document.createElement('script');
-    s.type = 'module';
-    s.textContent = `import { removeBackground } from 'https://esm.sh/@imgly/background-removal@1.5.5'; window.imglyLoaded = removeBackground; window.imglyLoading = null; console.log('✅ AI抠图模型加载完成');`;
-    s.onerror = (e)=>{
-      window.imglyLoading = null;
-      console.error('AI抠图模型加载失败', e);
-      reject(e);
-    };
-    document.head.appendChild(s);
-    // 轮询等待
-    const check = setInterval(()=>{
-      if(window.imglyLoaded){
-        clearInterval(check);
-        resolve(window.imglyLoaded);
-      }
-    }, 200);
-    setTimeout(()=>{
-      clearInterval(check);
-      if(!window.imglyLoaded){
-        reject(new Error('AI抠图模型加载超时'));
-      }
-    }, 60000); // 60秒超时
-  });
-  return window.imglyLoading;
-};
-</script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script>
@@ -303,10 +270,6 @@ window.__loadImgly = async function(){
     .step-dot.active{ background:linear-gradient(90deg,#6366f1,#8b5cf6); }
     .step-dot.done{ background:#10b981; }
   </style>
-
-  <script type="module">
-    // @imgly/background-removal loaded on demand
-  </script>
 </head>
 <body>
 
@@ -1012,22 +975,43 @@ window.__loadImgly = async function(){
 <div id="tipModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[80] p-4">
   <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl text-center modal-fade overflow-hidden">
     <!-- 顶部 -->
-    <div class="pt-8 pb-6 px-6" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
-      <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3" style="background:#fff;border:3px solid #f59e0b;">
-        <span style="font-size:32px;">☕</span>
+    <div class="pt-7 pb-5 px-6" style="background:linear-gradient(135deg,#fef3c7,#fde68a);">
+      <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-2" style="background:#fff;border:3px solid #f59e0b;">
+        <span style="font-size:28px;">☕</span>
       </div>
-      <h3 class="text-xl font-black" style="color:#92400e;">下载成功！</h3>
-      <p class="text-sm mt-1" style="color:#b45309;">如果你觉得好用，请我喝杯奶茶吧 🙏</p>
+      <h3 class="text-lg font-black" style="color:#92400e;">下载成功啦～</h3>
+      <p class="text-xs mt-1" style="color:#b45309;">如果你觉得好用，请我喝杯奶茶吧 🙏</p>
     </div>
-    <!-- 收款码 -->
-    <div class="px-6 py-4" style="background:#fff;">
-      <img id="tipQRImg" src="" alt="赞赏码" style="display:block;margin:0 auto;width:200px;height:auto;aspect-ratio:364/300;max-width:100%;background:#fff;">
-      <p class="text-xs text-gray-500 mt-3 text-center">微信扫码 → 选择金额 → 任意金额都感谢 ☕<br><span class="text-gray-400">金额随心，1元也是爱</span></p>
+    <!-- 金额快选 -->
+    <div class="px-6 pt-5 pb-3" style="background:#fff;">
+      <p class="text-xs text-gray-500 mb-2">选择金额 · 微信扫码</p>
+      <div class="flex gap-2 justify-center mb-3">
+        <button onclick="tipSelectAmount(this,'1.88')" class="tip-amount flex-1 py-2.5 rounded-xl border-2 border-orange-200 bg-white hover:bg-orange-50 transition">
+          <div class="text-base font-bold text-orange-600">¥1.88</div>
+          <div class="text-[10px] text-gray-400">一杯水的鼓励</div>
+        </button>
+        <button onclick="tipSelectAmount(this,'6.66')" class="tip-amount flex-1 py-2.5 rounded-xl border-2 border-orange-400 bg-orange-50 transition" style="border-color:#fb923c;">
+          <div class="text-base font-bold text-orange-600">¥6.66</div>
+          <div class="text-[10px] text-gray-400">奶茶起步价 ⭐</div>
+        </button>
+        <button onclick="tipSelectAmount(this,'18.88')" class="tip-amount flex-1 py-2.5 rounded-xl border-2 border-red-300 bg-white hover:bg-red-50 transition">
+          <div class="text-base font-bold text-red-500">¥18.88</div>
+          <div class="text-[10px] text-gray-400">点赞商家血赚</div>
+        </button>
+      </div>
+      <!-- 收款码 -->
+      <img id="tipQRImg" src="" alt="赞赏码" style="display:block;margin:0 auto;width:200px;height:auto;aspect-ratio:364/300;max-width:100%;background:#fff;border:1px solid #f3f4f6;border-radius:12px;">
+      <p class="text-[11px] text-gray-400 mt-2 text-center">微信扫码 → 选金额 → 输入「 <span id="tipHintAmount" class="text-orange-600 font-bold">6.66</span> 」→ 付款</p>
     </div>
-    <!-- 按钮 -->
-    <div class="px-6 pb-6 flex gap-3">
-      <button onclick="closeTipModal()" class="flex-1 py-3 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 transition">不用了，谢谢</button>
-      <button onclick="copyWechat()" class="flex-1 py-3 rounded-xl text-sm font-medium text-white transition" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fa fa-weixin mr-1"></i>加微信号</button>
+    <!-- 二维码下方：分享/好评 -->
+    <div class="px-6 py-3 flex gap-2" style="background:#fff;">
+      <button onclick="shareSite();closeTipModal();" class="flex-1 py-2.5 rounded-xl text-xs font-medium bg-pink-50 text-pink-600 hover:bg-pink-100 transition"><i class="fa fa-share-alt mr-1"></i>推荐给朋友</button>
+      <button onclick="closeTipModal();rateStar();" class="flex-1 py-2.5 rounded-xl text-xs font-medium bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition"><i class="fa fa-star mr-1"></i>点亮好评</button>
+    </div>
+    <!-- 底部按钮 -->
+    <div class="px-6 pb-5 pt-1 flex gap-3">
+      <button onclick="closeTipModal()" class="flex-1 py-3 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 transition">下次再说</button>
+      <button onclick="copyWechat()" class="flex-1 py-3 rounded-xl text-sm font-medium text-white transition" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fa fa-weixin mr-1"></i>加老板微信</button>
     </div>
   </div>
 </div>
@@ -1524,10 +1508,6 @@ async function handlePreviewUpload(input){
     drawPreview();
     fn.innerText = '✓ 已加载照片 · 请选择底色';
     showToast('照片已加载，点击下方底色试效果', 'success');
-    // 后台预热AI模型（不阻塞UI）
-    if(!aiModelWarmed){
-      setTimeout(()=>warmupAiModel(), 100);
-    }
   };
   previewImage.onerror = function(){
     fn.innerText = '✗ 图片加载失败';
@@ -1710,220 +1690,36 @@ function resetPreview(){
   showToast('已重置');
 }
 
-// 直接下载当前预览图（Canvas 合成，无水印）
-// ===== 下载前用浏览器端AI抠图（@imgly） =====
-let aiModelWarmed = false; // 标记模型是否已预热
-async function ensureAiModel(){
-  if(window.imglyLoaded) return window.imglyLoaded;
-  if(!window.imglyLoading){
-    window.imglyLoading = window.__loadImgly();
-  }
-  return window.imglyLoading;
-}
-
-// 用户上传照片后，预热AI模型（不阻塞UI）
-async function warmupAiModel(){
-  if(aiModelWarmed) return;
-  // 显示加载提示
-  showToast('🤖 AI抠图模型首次加载中（约10MB，请稍候30秒）...', 'info');
-  try{
-    const removeBackground = await ensureAiModel();
-    // 用1x1透明PNG做预热
-    const tinyPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-    await removeBackground(tinyPng, {output:{format:"image/png", quality:0.8}, model:'isnet_quint8'});
-    aiModelWarmed = true;
-    showToast('✅ AI抠图模型准备就绪！现在下载就能看到头发级精修', 'success');
-  }catch(e){
-    console.warn('AI模型预热失败:', e);
-    aiModelWarmed = false;
-    showToast('⚠️ AI模型加载失败，将用备用算法', 'info');
-  }
-}
-
+// ===== 下载预览图（纯前端Canvas像素换底，零依赖、零网络） =====
 async function downloadPreview(){
   if(!previewImage){
     showToast('请先上传照片', 'info');
     return;
   }
-  showToast('🎨 AI正在精细抠图（头发丝级别），请稍候...', 'info');
-  
-  try{
-    // 步骤1：尝试调用浏览器端AI抠图（如果模型已加载）
-    let finalBase64;
-    try{
-      const removeBackground = await ensureAiModel();
-      if(!removeBackground) throw new Error('AI模型未就绪');
-      const srcBase64 = canvasToBase64(document.getElementById('previewCanvas'));
-      
-      // 加 30 秒超时保护：太久就降级
-      const aiTask = removeBackground(srcBase64, {
-        output:{format:"image/png", quality:0.95},
-        model:'isnet_quint8'
-      });
-      const timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error('AI抠图超时')), 30000));
-      const cutoutBlob = await Promise.race([aiTask, timeout]);
-      
-      if(!(cutoutBlob instanceof Blob) || cutoutBlob.size < 100){
-        throw new Error('AI抠图结果无效（'+ (cutoutBlob && cutoutBlob.size) +' bytes）');
-      }
-      console.log('AI抠图返回 Blob:', cutoutBlob.size, 'bytes');
-      
-      // 直接用 createImageBitmap 加载 Blob，避免 Image.src 路径出错
-      const bitmap = await createImageBitmap(cutoutBlob);
-      const bgColor = (document.querySelector('[data-bgc].active')||{}).dataset?.bgc || '#ffffff';
-      
-      // === AI mask 有效性检测 ===
-      // 模型可能返回：全空 PNG（模型未加载）/正常 mask/人像区透明
-      // 计算全图平均 alpha + 中心区域平均 alpha 判定
-      const probeCanvas = document.createElement('canvas');
-      probeCanvas.width = bitmap.width;
-      probeCanvas.height = bitmap.height;
-      const pctx = probeCanvas.getContext('2d', {willReadFrequently:true});
-      pctx.drawImage(bitmap, 0, 0);
-      const fullImgData = pctx.getImageData(0, 0, bitmap.width, bitmap.height).data;
-      let totalAlpha = 0, sampleCount = 0;
-      const sampleStep = 4 * 20; // 采样步进：每20像素采一个
-      for(let i=3; i<fullImgData.length; i+=sampleStep){ totalAlpha += fullImgData[i]; sampleCount++; }
-      const avgAlpha = sampleCount ? (totalAlpha / sampleCount) : 0;
-      // 中心区域平均 alpha
-      const cx = bitmap.width/4, cy = bitmap.height/4;
-      const cw = bitmap.width/2, ch = bitmap.height/2;
-      const centerImgData = pctx.getImageData(cx, cy, cw, ch).data;
-      let centerAlpha = 0, centerCount = 0;
-      for(let i=3; i<centerImgData.length; i+=sampleStep){ centerAlpha += centerImgData[i]; centerCount++; }
-      const centerAvg = centerCount ? (centerAlpha / centerCount) : 0;
-      
-      // 判断逻辑：
-      // - 全图 alpha 平均 < 10 → 模型未真正输出，全空 mask，放弃 AI 走像素降级
-      // - 中心 alpha 平均 < 30 且 全图 < 60 → mask 严重异常，放弃
-      // - 中心 alpha 明显低（全图高、中心低）→ mask 反了，反色
-      // - 其他 → 正常
-      let maskMode = 'normal';
-      if(avgAlpha < 10){
-        console.warn('❌ AI抠图返回全空 mask（avgAlpha=', avgAlpha.toFixed(1), '）→ 放弃AI走像素降级');
-        throw new Error('AI抠图无效（模型未真正加载）');
-      }else if(centerAvg < 30 && avgAlpha < 60){
-        console.warn('❌ AI抠图 mask 异常（center=', centerAvg.toFixed(1), '/avg=', avgAlpha.toFixed(1), '）→ 放弃');
-        throw new Error('AI抠图结果不可用');
-      }else if(centerAvg < 50 && avgAlpha > 100){
-        maskMode = 'inverted';
-        console.log('🪞 mask 反了 → 自动反色 (center=', centerAvg.toFixed(1), '/avg=', avgAlpha.toFixed(1), ')');
-      }else{
-        console.log('✅ AI抠图正常 (center=', centerAvg.toFixed(1), '/avg=', avgAlpha.toFixed(1), ')');
-      }
-      
-      const finalCanvas = document.createElement('canvas');
-      finalCanvas.width = bitmap.width;
-      finalCanvas.height = bitmap.height;
-      const fctx = finalCanvas.getContext('2d');
-      if(maskMode === 'inverted'){
-        // 在 bitmap 上反色 alpha：人像不透明区变透明，背景变不透明 → 然后叠原图才能得到正确抠图
-        // 做法：拿 mask 作为 alpha 通道，原图 RGB 保留
-        const w = bitmap.width, h = bitmap.height;
-        const probeFull = pctx.getImageData(0, 0, w, h);
-        // 原图（在合成中已经被画过底色，但我们这里拿的是 cutoutBlob，理论上是透明背景的纯人像）
-        // 由于 cutoutBlob 本身就是透明背景人像（或反），直接反转其 alpha 即可
-        for(let i=3; i<probeFull.data.length; i+=4){
-          probeFull.data[i] = 255 - probeFull.data[i];
-        }
-        // 把反转后的 mask alpha 跟原图 RGB 组合：用 cutoutBlob 原图 + 反转 alpha
-        // 简单做法：重新画原图，再用反转的 alpha 作为 globalCompositeOperation
-        const srcImg = await createImageBitmap(cutoutBlob);
-        fctx.drawImage(srcImg, 0, 0);
-        srcImg.close && srcImg.close();
-        const maskOnly = new ImageData(probeFull.data, w, h);
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = w; maskCanvas.height = h;
-        maskCanvas.getContext('2d').putImageData(maskOnly, 0, 0);
-        // 把反转 alpha 作为选区：destination-in 保留原图 RGB，反转 mask 控制透明度
-        fctx.globalCompositeOperation = 'destination-in';
-        fctx.drawImage(maskCanvas, 0, 0);
-        fctx.globalCompositeOperation = 'source-over';
-        // 现在 finalCanvas 上是正确抠出的人像（透明背景），填底色
-        fctx.globalCompositeOperation = 'destination-over';
-        fctx.fillStyle = bgColor;
-        fctx.fillRect(0, 0, w, h);
-        fctx.globalCompositeOperation = 'source-over';
-      }else{
-        fctx.fillStyle = bgColor;
-        fctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-        fctx.drawImage(bitmap, 0, 0);
-      }
-      bitmap.close && bitmap.close();
-      finalBase64 = finalCanvas.toDataURL('image/png', 1.0);
-    }catch(innerErr){
-      console.warn('AI抠图不可用，降级为像素换底', innerErr);
-      throw innerErr;
+  const canvas = document.getElementById('previewCanvas');
+  canvas.toBlob(blob=>{
+    if(!blob){
+      showToast('生成失败，请重试', 'error');
+      return;
     }
-    
-    // 步骤3：下载（容错处理：外部脚本报错不阻断下载）
+    const url = URL.createObjectURL(blob);
     try{
       const a = document.createElement('a');
-      a.href = finalBase64;
-      a.download = '证件照_' + Date.now() + '.png';
+      a.href = url;
+      a.download = '炫影证件照_' + Date.now() + '.png';
       a.rel = 'noopener';
       a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
       setTimeout(()=>document.body.removeChild(a), 100);
-    }catch(dlErr){
-      console.warn('下载触发异常，但文件已生成：', dlErr);
+    }catch(e){
+      console.warn('下载触发异常:', e);
     }
-    
     showToast('✅ 已下载，满意的话请我喝杯奶茶 🙏', 'success');
+    setTimeout(()=>URL.revokeObjectURL(url), 3000);
     setTimeout(()=>showTipModal(), 600);
-  }catch(e){
-    console.error('AI抠图失败，降级为像素算法', e);
-    showToast('⚠️ 网络慢，用备用算法生成', 'info');
-    // 降级：直接用canvas导出（不抠图，像素换底）
-    const canvas = document.getElementById('previewCanvas');
-    canvas.toBlob(blob=>{
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '证件照_' + Date.now() + '.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url), 1000);
-      showToast('✅ 已下载', 'success');
-      setTimeout(()=>showTipModal(), 600);
-    }, 'image/png', 0.95);
-  }
+  }, 'image/png', 0.95);
 }
-
-// Canvas转base64
-function canvasToBase64(canvas){
-  return canvas.toDataURL('image/png');
-}
-
-// 把透明PNG合成到指定底色上，返回base64
-async function compositeWithBg(cutoutBase64){
-  const bgColor = (document.querySelector('[data-bgc].active')||{}).dataset?.bgc || '#ffffff';
-  
-  const cutout = new Image();
-  cutout.src = cutoutBase64;
-  await new Promise((resolve,reject)=>{
-    cutout.onload = ()=>{ if(cutout.naturalWidth>0 && cutout.naturalHeight>0) resolve(); else reject(new Error('AI抠图结果为空')); };
-    cutout.onerror = ()=>reject(new Error('AI抠图结果加载失败'));
-  });
-  
-  const canvas = document.createElement('canvas');
-  canvas.width = cutout.naturalWidth;
-  canvas.height = cutout.naturalHeight;
-  const ctx = canvas.getContext('2d');
-  
-  // 1. 填底色
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // 2. 叠抠图（透明像素自动透出底色）
-  ctx.drawImage(cutout, 0, 0);
-  
-  return canvas.toDataURL('image/png', 1.0);
-}
-
-
 
 // ===== 赞赏弹窗 =====
 function showTipModal(){
