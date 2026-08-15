@@ -1005,26 +1005,6 @@ function updateProgress(panel){
 }
 
 // ===== 渲染套餐卡片 =====
-function getIconForItem(name){
-  const iconMap = {
-    '学籍照': 'fa-graduation-cap', '教师资格证': 'fa-chalkboard-teacher', '注册会计师': 'fa-calculator',
-    '护士资格考试': 'fa-user-nurse', '英语四六级': 'fa-language', '研究生考试': 'fa-university',
-    '全国计算机等级': 'fa-laptop-code', '简历照': 'fa-id-badge', '公务员考试': 'fa-landmark',
-    '卫生资格考试': 'fa-user-md', '出入境证件': 'fa-passport', '居民身份证': 'fa-id-card',
-    '机动车驾驶证': 'fa-car', '居住证': 'fa-home', '社保卡回执': 'fa-credit-card',
-    '回乡证': 'fa-exchange-alt', '网约车资格证': 'fa-taxi', '退役军人优待证': 'fa-medal',
-    '美国签证': 'fa-flag-usa', '欧洲申根签证': 'fa-globe-europe', '日本签证': 'fa-torii-gate',
-    '韩国签证': 'fa-flag', '加拿大签证': 'fa-maple-leaf', '澳大利亚签证': 'fa-kangaroo',
-    '英国签证': 'fa-crown', '马来西亚签证': 'fa-mosque', '泰国签证': 'fa-temple',
-    '新加坡签证': 'fa-building', '阿联酋签证': 'fa-building', '土耳其签证': 'fa-mosque',
-    '越南签证': 'fa-flag', '缅甸签证': 'fa-temple', '印度签证': 'fa-om', '菲律宾签证': 'fa-flag',
-    '一寸证件照': 'fa-square', '小二寸证件照': 'fa-portrait', '二寸证件照': 'fa-id-card-alt',
-    '结婚登记照': 'fa-heart', '毕业照': 'fa-graduation-cap', '定制规格': 'fa-cog'
-  };
-  for(let key in iconMap) if(name.includes(key)) return iconMap[key];
-  return 'fa-camera';
-}
-
 function renderCards(){
   const list = photoData[currentCat];
   if(!list.length){
@@ -1036,19 +1016,24 @@ function renderCards(){
     let badge = '';
     if(item.recommend) badge = '<span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-xl rounded-tr-xl shadow-lg z-10">推荐</span>';
     else if(item.hot) badge = '<span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-rose-400 to-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-xl rounded-tr-xl shadow-lg z-10">HOT</span>';
-    const icon = getIconForItem(item.name);
 
     html += `
-    <div class="photo-card bg-white rounded-2xl p-4 border-2 border-transparent fade-in hover:border-indigo-200 hover:shadow-lg transition-all cursor-pointer group"
+    <div class="photo-card bg-white rounded-2xl p-4 border-2 border-transparent fade-in hover:border-indigo-200 hover:shadow-lg transition-all cursor-pointer group relative"
          data-idx="${idx}" onclick="openModal('${currentCat}',${idx})">
       ${badge}
-      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-        <i class="fa ${icon} text-indigo-600 text-xl"></i>
-      </div>
-      <h4 class="font-bold text-brand-primary text-sm mb-1">${item.name}</h4>
-      <p class="text-xs text-gray-500 mb-2">${item.size}</p>
-      <div class="flex flex-wrap gap-1">
+      <h4 class="font-bold text-brand-primary text-base mb-2">${item.name}</h4>
+      <p class="text-sm text-gray-500 mb-3">${item.size}</p>
+      <div class="flex flex-wrap gap-1 mb-3">
         <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${item.color}</span>
+      </div>
+      <div class="border-t border-gray-100 pt-3 mt-2">
+        <p class="text-[10px] text-gray-400 mb-1.5">到店服务包含</p>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">专业拍摄</span>
+          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">精修出片</span>
+          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">电子档</span>
+          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">打印件</span>
+        </div>
       </div>
     </div>`;
   });
