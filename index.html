@@ -491,9 +491,9 @@
               <optgroup label="━━ 考试报名 ━━">
                 <option value="24:30">注册会计师 24×30mm</option>
                 <option value="24:32">英语四六级 24×32mm</option>
-                <option value="34:51">教师资格证 34×51mm</option>
+                <option value="35:53">教师资格证 35×53mm</option>
                 <option value="35:45">护士执业 35×45mm</option>
-                <option value="39:52">研究生考试 39×52mm</option>
+                <option value="33:48">研究生考试 33×48mm</option>
               </optgroup>
               <optgroup label="━━ 签证/出国 ━━">
                 <option value="51:51">美国签证 51×51mm（正方形）</option>
@@ -854,11 +854,11 @@
 const photoData = {
   exam:[
     {name:"学籍照",size:"26×32mm",color:"白底",use:"学籍档案、学信网采集",price:22,hot:false},
-    {name:"教师资格证",size:"34×51mm",color:"白底",use:"教资笔试、面试报名",price:28,hot:true,recommend:true},
+    {name:"教师资格证",size:"35×53mm",color:"白底",use:"教资笔试、面试报名",price:28,hot:true,recommend:true},
     {name:"注册会计师",size:"24×30mm",color:"白底",use:"CPA考试报名",price:28,hot:false},
     {name:"护士资格考试",size:"35×45mm",color:"白底",use:"护资考试报名",price:28,hot:false},
     {name:"英语四六级",size:"24×32mm",color:"蓝/白底",use:"CET4/6报名",price:22,hot:false},
-    {name:"研究生考试",size:"39×52mm",color:"白底",use:"考研报名、学信网",price:28,hot:true,recommend:true},
+    {name:"研究生考试",size:"33×48mm",color:"白底",use:"考研报名、学信网",price:28,hot:true,recommend:true},
     {name:"全国计算机等级",size:"33×48mm",color:"白底",use:"NCRE计算机考试",price:25,hot:false},
     {name:"简历照",size:"25×35mm",color:"多底色",use:"求职简历、校园招聘",price:20,hot:true,recommend:true},
     {name:"公务员考试",size:"25×35mm",color:"蓝/白底",use:"省考、国考报名",price:25,hot:false},
@@ -1006,17 +1006,31 @@ function renderCards(){
   let html = "";
   list.forEach((item,idx)=>{
     let badge = '';
-    if(item.recommend) badge = '<span class="badge-recommend text-white text-[10px] px-1.5 py-0.5 rounded absolute top-2 right-2">推荐</span>';
-    else if(item.hot) badge = '<span class="badge-hot text-white text-[10px] px-1.5 py-0.5 rounded absolute top-2 right-2">HOT</span>';
+    if(item.recommend) badge = '<span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-xl rounded-tr-xl shadow-lg z-10">推荐</span>';
+    else if(item.hot) badge = '<span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-rose-400 to-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-xl rounded-tr-xl shadow-lg z-10">HOT</span>';
 
     html += `
-    <div class="photo-card bg-white rounded-xl shadow-sm p-4 cursor-pointer relative fade-in border-2 border-transparent"
+    <div class="photo-card bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-5 cursor-pointer relative fade-in border border-gray-100 hover:border-indigo-200 group overflow-hidden"
          data-idx="${idx}" onclick="openModal('${currentCat}',${idx})">
       ${badge}
-      <h4 class="font-medium text-brand-primary text-sm leading-snug">${item.name}</h4>
-      <div class="text-indigo-600 font-black mt-2 text-lg">¥${item.price}</div>
-      <p class="text-xs text-gray-400 mt-1">${item.size}</p>
-      <p class="text-[10px] text-gray-300 mt-1">点击查看详情</p>
+      <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-indigo-50 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <h4 class="font-semibold text-gray-800 text-base leading-tight group-hover:text-indigo-600 transition-colors">${item.name}</h4>
+      <div class="flex items-baseline gap-1 mt-3">
+        <span class="text-xs text-gray-400">¥</span>
+        <span class="text-indigo-600 font-bold text-2xl">${item.price}</span>
+      </div>
+      <div class="mt-3 flex items-center gap-2">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+          ${item.size}
+        </span>
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-600">
+          ${item.color}
+        </span>
+      </div>
+      <p class="text-xs text-gray-400 mt-3 flex items-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        点击查看详情
+      </p>
     </div>`;
   });
   document.getElementById('cardWrap').innerHTML = html;
