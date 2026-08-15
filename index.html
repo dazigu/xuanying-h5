@@ -473,12 +473,40 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">2. 选择证件规格</label>
             <select id="previewSize" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" onchange="drawPreview()">
-              <option value="26:32">身份证 26×32mm</option>
-              <option value="25:35">一寸 25×35mm（最常用）</option>
-              <option value="33:48">小二寸 33×48mm</option>
-              <option value="35:49">二寸 35×49mm</option>
-              <option value="51:51">美国签证 51×51mm</option>
-              <option value="40:60">结婚登记 40×60mm</option>
+              <optgroup label="━━ 常用尺寸 ━━">
+                <option value="25:35">一寸 25×35mm（最常用）</option>
+                <option value="33:48">小二寸 33×48mm（最常用）</option>
+                <option value="35:49">二寸 35×49mm</option>
+                <option value="26:32">二寸 26×32mm（身份证）</option>
+              </optgroup>
+              <optgroup label="━━ 国内证件 ━━">
+                <option value="33:48">护照 33×48mm</option>
+                <option value="48:33">驾照/居住证 48×33mm</option>
+                <option value="21:26">港澳通行证 21×26mm</option>
+                <option value="40:60">结婚登记 40×60mm</option>
+                <option value="32:38">兵役证 32×38mm</option>
+                <option value="22:32">党员证 22×32mm</option>
+              </optgroup>
+              <optgroup label="━━ 考试报名 ━━">
+                <option value="24:30">注册会计师 24×30mm</option>
+                <option value="24:32">英语四六级 24×32mm</option>
+                <option value="34:51">教师资格证 34×51mm</option>
+                <option value="35:45">护士执业 35×45mm</option>
+                <option value="39:52">研究生考试 39×52mm</option>
+              </optgroup>
+              <optgroup label="━━ 签证/出国 ━━">
+                <option value="51:51">美国签证 51×51mm（正方形）</option>
+                <option value="35:45">日本签证 35×45mm</option>
+                <option value="35:35">韩国签证 35×35mm（正方形）</option>
+                <option value="35:45">申根签证 35×45mm</option>
+                <option value="35:45">英国签证 35×45mm</option>
+              </optgroup>
+              <optgroup label="━━ 求职/生活 ━━">
+                <option value="25:35">简历照 25×35mm</option>
+                <option value="33:48">职业装 33×48mm</option>
+                <option value="48:66">海报形象照 48×66mm</option>
+                <option value="64:96">宣传形象照 64×96mm</option>
+              </optgroup>
             </select>
           </div>
 
