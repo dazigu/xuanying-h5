@@ -746,15 +746,12 @@
       <div class="flex"><span class="font-semibold text-gray-500 w-16">用途</span><span id="modalUse2" class="text-gray-800"></span></div>
       <div class="flex"><span class="font-semibold text-gray-500 w-16">评分</span><span class="stars">★★★★★</span><span class="text-xs text-gray-400 ml-1">4.9 / 5.0</span></div>
       <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mt-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs text-gray-500 mb-0.5">套餐价格</p>
-            <p class="text-[10px] text-gray-400">含电子版 + 冲印版</p>
-          </div>
-          <div class="text-right">
-            <span class="text-xs text-gray-400">¥</span>
-            <span id="modalPrice" class="text-3xl font-black text-indigo-600 ml-0.5"></span>
-          </div>
+        <p class="text-xs text-gray-500 mb-2">到店服务包含</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="text-xs bg-white text-indigo-600 px-2.5 py-1 rounded-lg shadow-sm font-medium">专业拍摄</span>
+          <span class="text-xs bg-white text-indigo-600 px-2.5 py-1 rounded-lg shadow-sm font-medium">精修出片</span>
+          <span class="text-xs bg-white text-indigo-600 px-2.5 py-1 rounded-lg shadow-sm font-medium">电子档</span>
+          <span class="text-xs bg-white text-indigo-600 px-2.5 py-1 rounded-lg shadow-sm font-medium">打印件</span>
         </div>
       </div>
     </div>
@@ -1023,17 +1020,8 @@ function renderCards(){
       ${badge}
       <h4 class="font-bold text-brand-primary text-base mb-2">${item.name}</h4>
       <p class="text-sm text-gray-500 mb-3">${item.size}</p>
-      <div class="flex flex-wrap gap-1 mb-3">
+      <div class="flex flex-wrap gap-1">
         <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${item.color}</span>
-      </div>
-      <div class="border-t border-gray-100 pt-3 mt-2">
-        <p class="text-[10px] text-gray-400 mb-1.5">到店服务包含</p>
-        <div class="flex flex-wrap gap-1.5">
-          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">专业拍摄</span>
-          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">精修出片</span>
-          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">电子档</span>
-          <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">打印件</span>
-        </div>
       </div>
     </div>`;
   });
