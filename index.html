@@ -909,6 +909,7 @@ let urgentFee = 0;
 let deliveryName = "到店自取";
 let urgentName = "普通出片（24小时）";
 let previewImage = null;
+let cutoutImage = null;
 let formImageFile = null;
 let compareList = [];
 let currentFormStep = 1;
@@ -1306,7 +1307,32 @@ function handleFormDrop(e){
 }
 
 // ===== 预览 =====
-function handlePreviewUpload(input){
+function fileToBase64(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function callCutoutAPI(base64){
+  try{
+    const res = await fetch('https://xuanying-api.luoyiping308.workers.dev/api/cutout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({image: base64})
+    });
+    const data = await res.json();
+    if(!res.ok || !data.success) throw new Error(data.error || data.msg || '抠图失败');
+    return data.image || data.foreground || data.foreground_binary;
+  }catch(e){
+    console.error('AI抠图失败:', e);
+    return null;
+  }
+}
+
+async function handlePreviewUpload(input){
   if(input.files.length===0)return;
   const file = input.files[0];
   if(file.size > 10*1024*1024){
@@ -1314,14 +1340,29 @@ function handlePreviewUpload(input){
     return;
   }
   previewImage = new Image();
-  previewImage.onload = function(){
+  previewImage.onload = async function(){
     const fn = document.getElementById('previewFileName');
     fn.innerText = '✓ 已加载：' + file.name + `（${(file.size/1024).toFixed(1)}KB）`;
     fn.classList.remove('hidden');
     imageZoom = 1; imageOffsetX = 0; imageOffsetY = 0;
     updateZoomPercent();
     drawPreview();
-    showToast('照片已加载');
+    showToast('照片已加载，开始AI抠图...');
+    try{
+      const base64 = await fileToBase64(file);
+      const fg = await callCutoutAPI(base64);
+      if(fg){
+        const ci = new Image();
+        await new Promise((res,rej)=>{ci.onload=res; ci.onerror=rej; ci.src='data:image/png;base64,'+fg;});
+        cutoutImage = ci;
+        drawPreview();
+        showToast('✓ AI抠图完成', 'success');
+      } else {
+        showToast('⚠️ AI抠图不可用，使用像素算法', 'error');
+      }
+    }catch(e){
+      showToast('⚠️ 抠图异常: '+e.message, 'error');
+    }
   };
   previewImage.src = URL.createObjectURL(file);
 }
@@ -1376,13 +1417,14 @@ function drawPreview(){
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   if(previewImage){
-    const baseScale = Math.max(canvas.width / previewImage.width, canvas.height / previewImage.height);
+    const imgToDraw = cutoutImage || previewImage;
+    const baseScale = Math.max(canvas.width / imgToDraw.width, canvas.height / imgToDraw.height);
     const scale = baseScale * imageZoom;
-    const imgW = previewImage.width * scale;
-    const imgH = previewImage.height * scale;
+    const imgW = imgToDraw.width * scale;
+    const imgH = imgToDraw.height * scale;
     const x = (canvas.width - imgW) / 2 + imageOffsetX;
     const y = (canvas.height - imgH) / 2 + imageOffsetY;
-    ctx.drawImage(previewImage, x, y, imgW, imgH);
+    ctx.drawImage(imgToDraw, x, y, imgW, imgH);
 
     // 朴素白底换底：仅当非白底时才处理
     const isWhite = bgColor.toLowerCase()==='#ffffff' || bgColor.toLowerCase()==='#fff';
@@ -1443,6 +1485,7 @@ function drawPreview(){
 
 function resetPreview(){
   previewImage = null;
+  cutoutImage = null;
   document.getElementById('previewUpload').value = '';
   document.getElementById('previewFileName').classList.add('hidden');
   imageZoom = 1; imageOffsetX = 0; imageOffsetY = 0;
