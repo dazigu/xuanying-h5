@@ -497,7 +497,7 @@
               </optgroup>
               <optgroup label="━━ 签证/出国 ━━">
                 <option value="51:51">美国签证 51×51mm（正方形）</option>
-                <option value="35:45">日本签证 35×45mm</option>
+                <option value="45:45">日本签证 45×45mm</option>
                 <option value="35:35">韩国签证 35×35mm（正方形）</option>
                 <option value="35:45">申根签证 35×45mm</option>
                 <option value="35:45">英国签证 35×45mm</option>
@@ -745,9 +745,17 @@
       <div class="flex"><span class="font-semibold text-gray-500 w-16">底色</span><span id="modalColor" class="text-gray-800"></span></div>
       <div class="flex"><span class="font-semibold text-gray-500 w-16">用途</span><span id="modalUse2" class="text-gray-800"></span></div>
       <div class="flex"><span class="font-semibold text-gray-500 w-16">评分</span><span class="stars">★★★★★</span><span class="text-xs text-gray-400 ml-1">4.9 / 5.0</span></div>
-      <div class="flex items-center justify-between border-t pt-3 mt-3">
-        <span class="font-semibold text-gray-500">价格</span>
-        <span id="modalPrice" class="text-2xl font-black text-indigo-600"></span>
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mt-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs text-gray-500 mb-0.5">套餐价格</p>
+            <p class="text-[10px] text-gray-400">含电子版 + 冲印版</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-gray-400">¥</span>
+            <span id="modalPrice" class="text-3xl font-black text-indigo-600 ml-0.5"></span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="flex gap-3 p-5 pt-0">
@@ -868,7 +876,7 @@ const photoData = {
     {name:"出入境证件",size:"33×48mm",color:"白底",use:"护照、往来港澳通行证",price:30,hot:true,recommend:true},
     {name:"居民身份证",size:"26×32mm",color:"白底",use:"大陆身份证、户籍业务",price:25,hot:false},
     {name:"机动车驾驶证",size:"22×32mm",color:"白底",use:"驾照申领、换证",price:20,hot:true,recommend:true},
-    {name:"居住证",size:"33×48mm",color:"白底",use:"城市居住证办理",price:28,hot:false},
+    {name:"居住证",size:"26×32mm",color:"白底",use:"城市居住证办理",price:28,hot:false},
     {name:"社保卡回执",size:"358×441px",color:"白底",use:"社保卡、社保回执",price:28,hot:false},
     {name:"回乡证",size:"33×48mm",color:"白底",use:"港澳居民回乡证",price:30,hot:false},
     {name:"网约车资格证",size:"25×35mm",color:"白底",use:"网约车从业资格",price:22,hot:false},
@@ -877,7 +885,7 @@ const photoData = {
   visa:[
     {name:"美国签证",size:"51×51mm",color:"白底",use:"美签DS160",price:45,hot:true,recommend:true},
     {name:"欧洲申根签证",size:"35×45mm",color:"白底",use:"申根通用",price:40,hot:true,recommend:true},
-    {name:"日本签证",size:"35×45mm",color:"白底",use:"日本旅游签",price:36,hot:false},
+    {name:"日本签证",size:"45×45mm",color:"白底",use:"日本旅游签",price:36,hot:false},
     {name:"韩国签证",size:"35×45mm",color:"白底",use:"韩国旅游/商务签",price:36,hot:false},
     {name:"加拿大签证",size:"35×45mm",color:"白底",use:"加拿大访问签",price:42,hot:false},
     {name:"澳大利亚签证",size:"35×45mm",color:"白底",use:"澳洲签证",price:42,hot:false},
@@ -887,7 +895,7 @@ const photoData = {
     {name:"新加坡签证",size:"35×45mm",color:"白底",use:"新加坡签证",price:36,hot:false},
     {name:"阿联酋签证",size:"35×45mm",color:"白底",use:"阿联酋迪拜签",price:38,hot:false},
     {name:"土耳其签证",size:"35×45mm",color:"白底",use:"土耳其电子签",price:36,hot:false},
-    {name:"越南签证",size:"40×60mm",color:"白底",use:"越南签证",price:33,hot:false},
+    {name:"越南签证",size:"35×45mm",color:"白底",use:"越南签证",price:33,hot:false},
     {name:"缅甸签证",size:"35×45mm",color:"白底",use:"缅甸旅游/商务签",price:35,hot:false},
     {name:"印度签证",size:"35×45mm",color:"白底",use:"印度电子签",price:38,hot:false},
     {name:"菲律宾签证",size:"35×45mm",color:"白底",use:"菲律宾签证",price:35,hot:false}
@@ -896,7 +904,7 @@ const photoData = {
     {name:"一寸证件照",size:"25×35mm",color:"红/蓝/白底",use:"简历、档案、报名表",price:18,hot:true,recommend:true},
     {name:"小二寸证件照",size:"33×48mm",color:"白底",use:"护照、通行证通用",price:25,hot:false},
     {name:"二寸证件照",size:"35×49mm",color:"红/蓝/白底",use:"资格证、职称材料",price:20,hot:false},
-    {name:"结婚登记照",size:"40×60mm",color:"红底",use:"民政局婚姻登记",price:68,hot:true}
+    {name:"结婚登记照",size:"53×35mm",color:"红底",use:"民政局婚姻登记",price:68,hot:true}
   ]
 };
 
@@ -997,6 +1005,26 @@ function updateProgress(panel){
 }
 
 // ===== 渲染套餐卡片 =====
+function getIconForItem(name){
+  const iconMap = {
+    '学籍照': 'fa-graduation-cap', '教师资格证': 'fa-chalkboard-teacher', '注册会计师': 'fa-calculator',
+    '护士资格考试': 'fa-user-nurse', '英语四六级': 'fa-language', '研究生考试': 'fa-university',
+    '全国计算机等级': 'fa-laptop-code', '简历照': 'fa-id-badge', '公务员考试': 'fa-landmark',
+    '卫生资格考试': 'fa-user-md', '出入境证件': 'fa-passport', '居民身份证': 'fa-id-card',
+    '机动车驾驶证': 'fa-car', '居住证': 'fa-home', '社保卡回执': 'fa-credit-card',
+    '回乡证': 'fa-exchange-alt', '网约车资格证': 'fa-taxi', '退役军人优待证': 'fa-medal',
+    '美国签证': 'fa-flag-usa', '欧洲申根签证': 'fa-globe-europe', '日本签证': 'fa-torii-gate',
+    '韩国签证': 'fa-flag', '加拿大签证': 'fa-maple-leaf', '澳大利亚签证': 'fa-kangaroo',
+    '英国签证': 'fa-crown', '马来西亚签证': 'fa-mosque', '泰国签证': 'fa-temple',
+    '新加坡签证': 'fa-building', '阿联酋签证': 'fa-building', '土耳其签证': 'fa-mosque',
+    '越南签证': 'fa-flag', '缅甸签证': 'fa-temple', '印度签证': 'fa-om', '菲律宾签证': 'fa-flag',
+    '一寸证件照': 'fa-square', '小二寸证件照': 'fa-portrait', '二寸证件照': 'fa-id-card-alt',
+    '结婚登记照': 'fa-heart', '毕业照': 'fa-graduation-cap', '定制规格': 'fa-cog'
+  };
+  for(let key in iconMap) if(name.includes(key)) return iconMap[key];
+  return 'fa-camera';
+}
+
 function renderCards(){
   const list = photoData[currentCat];
   if(!list.length){
@@ -1008,29 +1036,20 @@ function renderCards(){
     let badge = '';
     if(item.recommend) badge = '<span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-xl rounded-tr-xl shadow-lg z-10">推荐</span>';
     else if(item.hot) badge = '<span class="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-rose-400 to-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-xl rounded-tr-xl shadow-lg z-10">HOT</span>';
+    const icon = getIconForItem(item.name);
 
     html += `
-    <div class="photo-card bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-5 cursor-pointer relative fade-in border border-gray-100 hover:border-indigo-200 group overflow-hidden"
+    <div class="photo-card bg-white rounded-2xl p-4 border-2 border-transparent fade-in hover:border-indigo-200 hover:shadow-lg transition-all cursor-pointer group"
          data-idx="${idx}" onclick="openModal('${currentCat}',${idx})">
       ${badge}
-      <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-indigo-50 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <h4 class="font-semibold text-gray-800 text-base leading-tight group-hover:text-indigo-600 transition-colors">${item.name}</h4>
-      <div class="flex items-baseline gap-1 mt-3">
-        <span class="text-xs text-gray-400">¥</span>
-        <span class="text-indigo-600 font-bold text-2xl">${item.price}</span>
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+        <i class="fa ${icon} text-indigo-600 text-xl"></i>
       </div>
-      <div class="mt-3 flex items-center gap-2">
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-          ${item.size}
-        </span>
-        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-600">
-          ${item.color}
-        </span>
+      <h4 class="font-bold text-brand-primary text-sm mb-1">${item.name}</h4>
+      <p class="text-xs text-gray-500 mb-2">${item.size}</p>
+      <div class="flex flex-wrap gap-1">
+        <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${item.color}</span>
       </div>
-      <p class="text-xs text-gray-400 mt-3 flex items-center gap-1">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        点击查看详情
-      </p>
     </div>`;
   });
   document.getElementById('cardWrap').innerHTML = html;
