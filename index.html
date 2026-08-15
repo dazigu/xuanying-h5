@@ -391,10 +391,12 @@
     <!-- 分类 Tab -->
     <div class="bg-white rounded-2xl shadow-sm mb-4 overflow-hidden">
       <div class="flex overflow-x-auto no-scrollbar" id="catTabs">
-        <div class="tab-btn active" data-cat="exam"><i class="fa fa-book mr-1"></i>考试证件</div>
-        <div class="tab-btn" data-cat="common"><i class="fa fa-id-card mr-1"></i>常用证件</div>
-        <div class="tab-btn" data-cat="visa"><i class="fa fa-globe mr-1"></i>各国签证</div>
+        <div class="tab-btn active" data-cat="exam"><i class="fa fa-book mr-1"></i>考试报名</div>
+        <div class="tab-btn" data-cat="idcard"><i class="fa fa-id-card mr-1"></i>身份证件</div>
+        <div class="tab-btn" data-cat="career"><i class="fa fa-briefcase mr-1"></i>职业从业</div>
+        <div class="tab-btn" data-cat="visa"><i class="fa fa-globe mr-1"></i>出国签证</div>
         <div class="tab-btn" data-cat="standard"><i class="fa fa-ruler mr-1"></i>标准寸照</div>
+        <div class="tab-btn" data-cat="special"><i class="fa fa-heart mr-1"></i>特殊证件</div>
       </div>
     </div>
 
@@ -473,40 +475,56 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">2. 选择证件规格</label>
             <select id="previewSize" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500" onchange="drawPreview()">
-              <optgroup label="━━ 常用尺寸 ━━">
-                <option value="25:35">一寸 25×35mm（最常用）</option>
-                <option value="33:48">小二寸 33×48mm（最常用）</option>
+              <optgroup label="━━ 标准寸照 ━━">
+                <option value="25:35">一寸 25×35mm</option>
+                <option value="22:32">小一寸 22×32mm</option>
+                <option value="33:48">大一寸/小二寸 33×48mm</option>
                 <option value="35:49">二寸 35×49mm</option>
-                <option value="26:32">二寸 26×32mm（身份证）</option>
+                <option value="35:45">大二寸 35×45mm</option>
+                <option value="55:84">三寸 55×84mm</option>
               </optgroup>
-              <optgroup label="━━ 国内证件 ━━">
-                <option value="33:48">护照 33×48mm</option>
-                <option value="22:32">驾照 22×32mm</option>
-                <option value="26:32">身份证/社保/居住证 26×32mm</option>
-                <option value="33:48">港澳通行证 33×48mm</option>
-                <option value="53:35">结婚登记 53×35mm（横版）</option>
-                <option value="26:32">兵役证 26×32mm（同身份证）</option>
-                <option value="26:32">党员证 26×32mm（同身份证）</option>
+              <optgroup label="━━ 身份证件 ━━">
+                <option value="26:32">身份证 26×32mm</option>
+                <option value="33:48">护照/港澳通行证 33×48mm</option>
+                <option value="22:32">机动车驾驶证 22×32mm</option>
+                <option value="26:32">居住证 26×32mm</option>
+                <option value="30:37">社保卡 30×37mm（358×441px）</option>
+                <option value="26:32">退役军人/残疾人证 26×32mm</option>
               </optgroup>
               <optgroup label="━━ 考试报名 ━━">
-                <option value="24:30">注册会计师 24×30mm</option>
-                <option value="24:32">英语四六级 24×32mm</option>
-                <option value="35:53">教师资格证 35×53mm</option>
-                <option value="35:45">护士执业 35×45mm</option>
                 <option value="33:48">研究生考试 33×48mm</option>
+                <option value="25:35">公务员考试 25×35mm</option>
+                <option value="35:53">教师资格证 35×53mm</option>
+                <option value="24:32">英语四六级 24×32mm</option>
+                <option value="33:48">计算机等级 33×48mm</option>
+                <option value="24:30">注册会计师 24×30mm</option>
+                <option value="25:35">初级会计 25×35mm</option>
+                <option value="35:45">护士资格 35×45mm</option>
+                <option value="35:49">法律职业资格 35×49mm</option>
+                <option value="33:48">普通话/导游证 33×48mm</option>
+                <option value="25:35">社工/证券/银行从业 25×35mm</option>
               </optgroup>
-              <optgroup label="━━ 签证/出国 ━━">
+              <optgroup label="━━ 职业从业 ━━">
+                <option value="25:35">健康证 25×35mm</option>
+                <option value="25:35">网约车/货运资格 25×35mm</option>
+                <option value="33:48">船员证/海员证 33×48mm</option>
+                <option value="25:35">厨师/电工/焊工证 25×35mm</option>
+              </optgroup>
+              <optgroup label="━━ 出国签证 ━━">
                 <option value="51:51">美国签证 51×51mm（正方形）</option>
-                <option value="45:45">日本签证 45×45mm</option>
-                <option value="35:35">韩国签证 35×35mm（正方形）</option>
                 <option value="35:45">申根签证 35×45mm</option>
-                <option value="35:45">英国签证 35×45mm</option>
+                <option value="45:45">日本签证 45×45mm（正方形）</option>
+                <option value="35:45">韩国签证 35×45mm</option>
+                <option value="35:45">英国/加拿大/澳洲 35×45mm</option>
+                <option value="35:45">新马泰/东南亚 35×45mm</option>
+                <option value="35:45">印度/阿联酋/土耳其 35×45mm</option>
               </optgroup>
-              <optgroup label="━━ 求职/生活 ━━">
-                <option value="25:35">简历照 25×35mm</option>
-                <option value="33:48">职业装 33×48mm</option>
-                <option value="48:66">海报形象照 48×66mm</option>
-                <option value="64:96">宣传形象照 64×96mm</option>
+              <optgroup label="━━ 特殊证件 ━━">
+                <option value="53:35">结婚登记照 53×35mm（横版红底）</option>
+                <option value="33:48">毕业/学位证 33×48mm</option>
+                <option value="26:32">学籍照 26×32mm</option>
+                <option value="33:48">入党/入团照 33×48mm（红底）</option>
+                <option value="25:35">老年/工会证 25×35mm（红底）</option>
               </optgroup>
             </select>
           </div>
@@ -792,10 +810,15 @@
           <p class="font-medium text-sm">考试报名</p>
           <p class="text-xs text-gray-500">教师资格证、考研、CPA 等</p>
         </div>
-        <div class="quiz-option" onclick="quizAnswer(this,'common')">
+        <div class="quiz-option" onclick="quizAnswer(this,'idcard')">
           <div class="quiz-icon">🪪</div>
-          <p class="font-medium text-sm">日常证件</p>
+          <p class="font-medium text-sm">身份证件</p>
           <p class="text-xs text-gray-500">身份证、护照、驾驶证</p>
+        </div>
+        <div class="quiz-option" onclick="quizAnswer(this,'career')">
+          <div class="quiz-icon">💼</div>
+          <p class="font-medium text-sm">职业从业</p>
+          <p class="text-xs text-gray-500">健康证、网约车、船员等</p>
         </div>
         <div class="quiz-option" onclick="quizAnswer(this,'visa')">
           <div class="quiz-icon">✈️</div>
@@ -803,9 +826,14 @@
           <p class="text-xs text-gray-500">美签、日签、申根等</p>
         </div>
         <div class="quiz-option" onclick="quizAnswer(this,'standard')">
-          <div class="quiz-icon">💼</div>
-          <p class="font-medium text-sm">简历/工作</p>
-          <p class="text-xs text-gray-500">求职、社保卡、结婚登记</p>
+          <div class="quiz-icon">📏</div>
+          <p class="font-medium text-sm">标准寸照</p>
+          <p class="text-xs text-gray-500">一寸、二寸、小二寸</p>
+        </div>
+        <div class="quiz-option" onclick="quizAnswer(this,'special')">
+          <div class="quiz-icon">❤️</div>
+          <p class="font-medium text-sm">特殊证件</p>
+          <p class="text-xs text-gray-500">结婚、毕业、入党等</p>
         </div>
       </div>
     </div>
@@ -855,53 +883,92 @@
 })();
 // ================================================================
 
-// 套餐数据（保持不变）
+// 套餐数据（全面更新分类）
 const photoData = {
+  // 考试报名
   exam:[
-    {name:"学籍照",size:"26×32mm",color:"蓝底",use:"学籍档案、学信网采集",price:22,hot:false},
-    {name:"教师资格证",size:"35×53mm",color:"白底",use:"教资笔试、面试报名",price:28,hot:true,recommend:true},
+    {name:"研究生考试",size:"33×48mm",color:"白/蓝底",use:"考研报名、网上确认",price:28,hot:true,recommend:true},
+    {name:"公务员考试",size:"25×35mm",color:"蓝底",use:"国考、省考报名",price:25,hot:true,recommend:true},
+    {name:"教师资格证",size:"35×53mm",color:"白底",use:"教资笔试、面试认定",price:28,hot:true,recommend:true},
+    {name:"英语四六级",size:"24×32mm",color:"蓝底",use:"CET4/6考试报名",price:22,hot:false},
+    {name:"全国计算机等级",size:"33×48mm",color:"白/蓝/红底",use:"NCRE一二级考试",price:25,hot:false},
     {name:"注册会计师",size:"24×30mm",color:"白底",use:"CPA考试报名",price:28,hot:false},
+    {name:"初级会计职称",size:"25×35mm",color:"白底",use:"会计资格考试",price:25,hot:false},
     {name:"护士资格考试",size:"35×45mm",color:"白底",use:"护资考试报名",price:28,hot:false},
-    {name:"英语四六级",size:"24×32mm",color:"蓝底",use:"CET4/6报名",price:22,hot:false},
-    {name:"研究生考试",size:"33×48mm",color:"白/蓝底",use:"考研报名、学信网",price:28,hot:true,recommend:true},
-    {name:"全国计算机等级",size:"33×48mm",color:"白底",use:"NCRE计算机考试",price:25,hot:false},
-    {name:"简历照",size:"25×35mm",color:"蓝/白底",use:"求职简历、校园招聘",price:20,hot:true,recommend:true},
-    {name:"公务员考试",size:"25×35mm",color:"蓝底",use:"省考、国考报名",price:25,hot:false},
-    {name:"卫生资格考试",size:"25×35mm",color:"白底",use:"卫生职称考试",price:25,hot:false}
+    {name:"卫生资格考试",size:"25×35mm",color:"白底",use:"卫生职称考试",price:25,hot:false},
+    {name:"法律职业资格",size:"35×49mm",color:"蓝/红底",use:"法考报名",price:30,hot:false},
+    {name:"普通话水平测试",size:"33×48mm",color:"白/蓝/红底",use:"普通话等级考试",price:22,hot:false},
+    {name:"导游资格证",size:"33×48mm",color:"白底",use:"导游证考试报名",price:25,hot:false},
+    {name:"社工证",size:"25×35mm",color:"白底",use:"社会工作者考试",price:25,hot:false},
+    {name:"证券从业资格",size:"25×35mm",color:"白底",use:"证券行业入门考试",price:25,hot:false},
+    {name:"银行从业资格",size:"25×35mm",color:"白底",use:"银行业资格考试",price:25,hot:false}
   ],
-  common:[
-    {name:"出入境证件",size:"33×48mm",color:"白/蓝底",use:"护照、往来港澳通行证",price:30,hot:true,recommend:true},
-    {name:"居民身份证",size:"26×32mm",color:"白底",use:"大陆身份证、户籍业务",price:25,hot:false},
-    {name:"机动车驾驶证",size:"22×32mm",color:"白底",use:"驾照申领、换证",price:20,hot:true,recommend:true},
+  // 身份证件
+  idcard:[
+    {name:"居民身份证",size:"26×32mm",color:"白底",use:"二代身份证办理",price:25,hot:true,recommend:true},
+    {name:"出入境证件",size:"33×48mm",color:"白/蓝底",use:"护照、港澳通行证",price:30,hot:true,recommend:true},
+    {name:"回乡证",size:"33×48mm",color:"蓝底",use:"港澳居民来往内地通行证",price:30,hot:false},
+    {name:"台湾通行证",size:"33×48mm",color:"白/蓝底",use:"往来台湾通行证",price:30,hot:false},
+    {name:"机动车驾驶证",size:"22×32mm",color:"白底",use:"驾照申领、换证、补证",price:20,hot:true,recommend:true},
     {name:"居住证",size:"26×32mm",color:"白底",use:"城市居住证办理",price:28,hot:false},
-    {name:"社保卡回执",size:"358×441px",color:"白底",use:"社保卡、社保回执",price:28,hot:false},
-    {name:"回乡证",size:"33×48mm",color:"蓝底",use:"港澳居民回乡证",price:30,hot:false},
-    {name:"网约车资格证",size:"25×35mm",color:"白底",use:"网约车从业资格",price:22,hot:false},
-    {name:"退役军人优待证",size:"26×32mm",color:"白底",use:"退役军人优待证",price:20,hot:false}
+    {name:"社保卡",size:"30×37mm(358×441px)",color:"白底",use:"社保卡申领、补办",price:28,hot:false},
+    {name:"医保卡",size:"26×32mm",color:"白底",use:"医保卡办理",price:25,hot:false},
+    {name:"退役军人优待证",size:"26×32mm",color:"白底",use:"退役军人优待证申领",price:20,hot:false},
+    {name:"残疾人证",size:"26×32mm",color:"白底",use:"残疾人证办理",price:20,hot:false}
   ],
+  // 职业从业
+  career:[
+    {name:"健康证",size:"25×35mm",color:"白底",use:"食品、公共场所从业",price:20,hot:true,recommend:true},
+    {name:"网约车资格证",size:"25×35mm",color:"白底",use:"网约车驾驶员从业",price:22,hot:false},
+    {name:"货运从业资格证",size:"25×35mm",color:"白底",use:"道路货物运输从业",price:22,hot:false},
+    {name:"船员证",size:"33×48mm",color:"白底",use:"海船船员适任证书",price:35,hot:false},
+    {name:"海员证",size:"33×48mm",color:"白底",use:"国际海员出入境",price:35,hot:false},
+    {name:"厨师证",size:"25×35mm",color:"白底",use:"中式烹调师资格",price:25,hot:false},
+    {name:"电工证",size:"25×35mm",color:"白底",use:"特种作业操作证",price:25,hot:false},
+    {name:"焊工证",size:"25×35mm",color:"白底",use:"特种作业操作证",price:25,hot:false}
+  ],
+  // 出国签证
   visa:[
-    {name:"美国签证",size:"51×51mm",color:"白底",use:"美签DS160",price:45,hot:true,recommend:true},
-    {name:"欧洲申根签证",size:"35×45mm",color:"白底",use:"申根通用",price:40,hot:true,recommend:true},
-    {name:"日本签证",size:"45×45mm",color:"白底",use:"日本旅游签",price:36,hot:false},
-    {name:"韩国签证",size:"35×45mm",color:"白底",use:"韩国旅游/商务签",price:36,hot:false},
-    {name:"加拿大签证",size:"35×45mm",color:"白底",use:"加拿大访问签",price:42,hot:false},
-    {name:"澳大利亚签证",size:"35×45mm",color:"白底",use:"澳洲签证",price:42,hot:false},
-    {name:"英国签证",size:"35×45mm",color:"白底",use:"英国访问签",price:42,hot:false},
-    {name:"马来西亚签证",size:"35×45mm",color:"白底",use:"马来西亚签证",price:35,hot:false},
+    {name:"美国签证",size:"51×51mm",color:"白底",use:"美签DS160、面试",price:45,hot:true,recommend:true},
+    {name:"欧洲申根签证",size:"35×45mm",color:"白底",use:"德国、法国等26国",price:40,hot:true,recommend:true},
+    {name:"日本签证",size:"45×45mm",color:"白底",use:"日本旅游、商务签",price:36,hot:false},
+    {name:"韩国签证",size:"35×45mm",color:"白底",use:"韩国旅游、商务签",price:36,hot:false},
+    {name:"英国签证",size:"35×45mm",color:"白底",use:"英国访问、留学签",price:42,hot:false},
+    {name:"加拿大签证",size:"35×45mm",color:"白底",use:"加拿大访问、留学签",price:42,hot:false},
+    {name:"澳大利亚签证",size:"35×45mm",color:"白底",use:"澳洲旅游、留学签",price:42,hot:false},
+    {name:"新西兰签证",size:"35×45mm",color:"白底",use:"新西兰旅游、留学签",price:40,hot:false},
+    {name:"新加坡签证",size:"35×45mm",color:"白底",use:"新加坡旅游、商务签",price:36,hot:false},
     {name:"泰国签证",size:"35×45mm",color:"白底",use:"泰国旅游签",price:32,hot:false},
-    {name:"新加坡签证",size:"35×45mm",color:"白底",use:"新加坡签证",price:36,hot:false},
-    {name:"阿联酋签证",size:"35×45mm",color:"白底",use:"阿联酋迪拜签",price:38,hot:false},
-    {name:"土耳其签证",size:"35×45mm",color:"白底",use:"土耳其电子签",price:36,hot:false},
-    {name:"越南签证",size:"35×45mm",color:"白底",use:"越南签证",price:33,hot:false},
-    {name:"缅甸签证",size:"35×45mm",color:"白底",use:"缅甸旅游/商务签",price:35,hot:false},
+    {name:"马来西亚签证",size:"35×45mm",color:"白底",use:"马来西亚旅游签",price:35,hot:false},
+    {name:"越南签证",size:"35×45mm",color:"白底",use:"越南旅游、商务签",price:33,hot:false},
+    {name:"菲律宾签证",size:"35×45mm",color:"白底",use:"菲律宾旅游签",price:35,hot:false},
+    {name:"印尼签证",size:"35×45mm",color:"白底",use:"印尼旅游、商务签",price:35,hot:false},
     {name:"印度签证",size:"35×45mm",color:"白底",use:"印度电子签",price:38,hot:false},
-    {name:"菲律宾签证",size:"35×45mm",color:"白底",use:"菲律宾签证",price:35,hot:false}
+    {name:"阿联酋签证",size:"35×45mm",color:"白底",use:"迪拜、阿布扎比",price:38,hot:false},
+    {name:"土耳其签证",size:"35×45mm",color:"白底",use:"土耳其电子签",price:36,hot:false},
+    {name:"俄罗斯签证",size:"35×45mm",color:"白底",use:"俄罗斯旅游、商务签",price:40,hot:false}
   ],
+  // 标准寸照
   standard:[
     {name:"一寸证件照",size:"25×35mm",color:"蓝/白底",use:"简历、档案、报名表",price:18,hot:true,recommend:true},
-    {name:"小二寸证件照",size:"33×48mm",color:"白/蓝底",use:"护照、通行证通用",price:25,hot:false},
-    {name:"二寸证件照",size:"35×49mm",color:"蓝/白底",use:"资格证、职称材料",price:20,hot:false}
-    {name:"结婚登记照",size:"53×35mm",color:"红底",use:"民政局婚姻登记",price:68,hot:true}
+    {name:"小一寸",size:"22×32mm",color:"白底",use:"驾驶证、部分考试",price:18,hot:false},
+    {name:"大一寸",size:"33×48mm",color:"蓝/白底",use:"护照、毕业证、雅思",price:25,hot:false},
+    {name:"二寸证件照",size:"35×49mm",color:"蓝/白底",use:"资格证、职称材料",price:20,hot:true,recommend:true},
+    {name:"小二寸",size:"33×48mm",color:"白/蓝底",use:"护照、部分国家签证",price:25,hot:false},
+    {name:"三寸",size:"55×84mm",color:"白底",use:"部分特殊证件",price:30,hot:false}
+  ],
+  // 特殊证件
+  special:[
+    {name:"结婚登记照",size:"53×35mm(横版)",color:"红底",use:"民政局婚姻登记",price:68,hot:true,recommend:true},
+    {name:"离婚证",size:"33×48mm",color:"红底",use:"离婚证办理",price:35,hot:false},
+    {name:"出生证明",size:"25×35mm",color:"白底",use:"新生儿出生医学证明",price:20,hot:false},
+    {name:"毕业证照",size:"33×48mm",color:"蓝底",use:"学信网、毕业证",price:25,hot:false},
+    {name:"学位证",size:"33×48mm",color:"蓝底",use:"学位证照片",price:25,hot:false},
+    {name:"学籍照",size:"26×32mm",color:"蓝底",use:"中小学生学籍采集",price:22,hot:false},
+    {name:"入团照",size:"25×35mm",color:"红底",use:"共青团员证",price:20,hot:false},
+    {name:"入党照",size:"33×48mm",color:"红底",use:"党员证、党务材料",price:25,hot:false},
+    {name:"工会证",size:"25×35mm",color:"红底",use:"工会会员证",price:20,hot:false},
+    {name:"老年证",size:"25×35mm",color:"红底",use:"老年人优待证",price:20,hot:false}
   ]
 };
 
@@ -1168,7 +1235,7 @@ function quizAnswer(el, cat){
     // 切换到对应分类
     document.querySelector(`#catTabs .tab-btn[data-cat="${cat}"]`).click();
     switchTab('order');
-    showToast(`已为你筛选【${cat==='exam'?'考试':cat==='common'?'常用':cat==='visa'?'签证':'标准'}】分类`, 'info');
+    showToast(`已为你筛选【${cat==='exam'?'考试':cat==='idcard'?'身份证件':cat==='career'?'职业从业':cat==='visa'?'签证':cat==='standard'?'标准寸照':'特殊证件'}】分类`, 'info');
   }, 400);
 }
 
